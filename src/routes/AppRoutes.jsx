@@ -6,6 +6,7 @@ import Ideas from "../pages/Ideas/Ideas";
 
 const AppRoutes = () => {
   return (
+    //this routes dont support in gh pages only support in vercel
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Layout />}>
@@ -15,6 +16,7 @@ const AppRoutes = () => {
         </Route>
       </Routes>
     </BrowserRouter>
+    
   );
 };
 
