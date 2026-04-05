@@ -1,0 +1,82 @@
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: sans-serif;
+}
+
+body {
+  background: #0b1326;
+  color: white;
+}
+
+/* Layout */
+.layout {
+  display: flex;
+  height: 100vh;
+}
+
+
+/* Footer */
+.sidebar-footer {
+  margin-top: auto;
+}
+
+.primary-btn {
+  width: 100%;
+  padding: 10px;
+  background: linear-gradient(135deg, #c3c0ff, #4f46e5);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* Main */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Topbar */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px;
+  background: #0b1326;
+}
+
+/* Hamburger */
+.hamburger {
+  font-size: 20px;
+  background: none;
+  border: none;
+  color: white;
+  display: none;
+}
+
+/* Content */
+.content {
+  padding: 20px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: -260px;
+    top: 0;
+    height: 100%;
+    z-index: 1000;
+  }
+
+  .sidebar.open {
+    left: 0;
+  }
+
+  .hamburger {
+    display: block;
+  }
+}
