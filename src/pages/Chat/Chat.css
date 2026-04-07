@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
 
 /* ── Reset & Base ─────────────────────────────────────────── */
@@ -30,9 +29,27 @@ body {
   to   { opacity: 1; transform: translateY(0);    }
 }
 
-/* ── Root Layout ──────────────────────────────────────────── */
-.cs-root {
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+
+@keyframes pulseRing {
+  0%   { transform: scale(1);   opacity: 0.8; }
+  100% { transform: scale(2.2); opacity: 0;   }
+}
+
+@keyframes drawerSlide {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+
+/* ══════════════════════════════════════════════════════════
+   ROOT — full height, column layout (no sidebar)
+   ══════════════════════════════════════════════════════════ */
+.cs-chat-root {
   display: flex;
+  flex-direction: column;
   height: 100vh;
   background: #111119;
   color: #dcdcf0;
@@ -41,153 +58,13 @@ body {
 }
 
 /* ══════════════════════════════════════════════════════════
-   SIDEBAR
+   HEADER
    ══════════════════════════════════════════════════════════ */
-.cs-sidebar {
-  width: 216px;
-  background: #0c0c18;
-  display: flex;
-  flex-direction: column;
-  border-right: 1px solid #18182a;
-  flex-shrink: 0;
-  padding: 20px 0;
-}
-
-/* Brand */
-.cs-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 16px 22px;
-}
-
-.cs-brand-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #7c6af7, #4a39c4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  flex-shrink: 0;
-  box-shadow: 0 4px 14px rgba(124, 106, 247, 0.4);
-}
-
-.cs-brand-name {
-  font-family: 'Syne', sans-serif;
-  font-weight: 800;
-  font-size: 13.5px;
-  color: #e4e4f8;
-  letter-spacing: -0.2px;
-}
-
-.cs-brand-sub {
-  font-size: 8.5px;
-  color: #36364e;
-  letter-spacing: 1.6px;
-  text-transform: uppercase;
-  margin-top: 1px;
-}
-
-/* New Analysis button */
-.cs-new-btn-wrap {
-  padding: 0 12px 16px;
-}
-
-.cs-new-btn {
-  width: 100%;
-  padding: 9px 14px;
-  background: linear-gradient(135deg, #7c6af7, #4a39c4);
-  border: none;
-  border-radius: 10px;
-  color: #fff;
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 600;
-  font-size: 12.5px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  box-shadow: 0 4px 16px rgba(124, 106, 247, 0.3);
-  transition: filter 0.15s, transform 0.15s;
-}
-
-.cs-new-btn:hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
-}
-
-.cs-new-btn-plus {
-  font-size: 17px;
-  line-height: 1;
-}
-
-/* Nav */
-.cs-nav {
-  flex: 1;
-  padding: 0 8px;
-}
-
-.cs-nav-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8.5px 11px;
-  border-radius: 8px;
-  margin-bottom: 2px;
-  color: #6b6b9b;
-  cursor: pointer;
-  border-left: 2px solid transparent;
-  transition: all 0.15s;
-  font-size: 12.5px;
-}
-
-.cs-nav-item:hover {
-  background: #191928;
-  color: #9080f0;
-}
-
-.cs-nav-item.active {
-  background: #191928;
-  color: #9080f0;
-  border-left-color: #7c6af7;
-  font-weight: 600;
-}
-
-.cs-nav-item.active .cs-nav-icon {
-  color: #7c6af7;
-}
-
-.cs-nav-icon {
-  display: flex;
-  flex-shrink: 0;
-}
-
-/* Bottom nav */
-.cs-bottom-nav {
-  padding: 8px 8px 0;
-  border-top: 1px solid #16162a;
-}
-
-/* ══════════════════════════════════════════════════════════
-   MAIN CONTENT
-   ══════════════════════════════════════════════════════════ */
-.cs-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-width: 0;
-}
-
-/* Header */
 .cs-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 24px;
+  padding: 12px 28px;
   border-bottom: 1px solid #16162a;
   background: #111119;
   flex-shrink: 0;
@@ -204,10 +81,7 @@ body {
   border: 1px solid #20203a;
 }
 
-.cs-search-icon {
-  color: #36364e;
-  display: flex;
-}
+.cs-search-icon { color: #36364e; display: flex; }
 
 .cs-search-input {
   background: none;
@@ -225,7 +99,7 @@ body {
   gap: 12px;
 }
 
-/* Stream/Full toggle */
+/* Stream / Full toggle */
 .cs-mode-toggle {
   display: flex;
   align-items: center;
@@ -249,21 +123,11 @@ body {
   background: transparent;
 }
 
-.cs-mode-btn:hover {
-  background: #252540;
-}
+.cs-mode-btn:hover { background: #252540; }
+.cs-mode-btn.active { background: #7c6af7; color: #fff; }
 
-.cs-mode-btn.active {
-  background: #7c6af7;
-  color: #fff;
-}
-
-/* Status indicator */
-.cs-status {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
+/* Status */
+.cs-status { display: flex; align-items: center; gap: 5px; }
 
 .cs-status-dot {
   width: 7px;
@@ -273,13 +137,11 @@ body {
   display: inline-block;
 }
 
-.cs-status-label {
-  color: #484868;
-  font-size: 11.5px;
-}
+.cs-status-label { color: #484868; font-size: 11.5px; }
 
 /* Icon button */
 .cs-icon-btn {
+  position: relative;
   width: 32px;
   height: 32px;
   border-radius: 8px;
@@ -293,12 +155,26 @@ body {
   transition: all 0.15s;
 }
 
-.cs-icon-btn:hover {
-  background: #1a1a2e;
-  color: #9080f0;
+.cs-icon-btn:hover { background: #1a1a2e; color: #9080f0; }
+
+/* Small icon button (used in modals/drawers) */
+.cs-icon-btn-sm {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid #20203a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #484868;
+  transition: all 0.15s;
 }
 
-/* User profile */
+.cs-icon-btn-sm:hover { background: #1a1a2e; color: #9080f0; }
+
+/* User */
 .cs-user {
   display: flex;
   align-items: center;
@@ -307,9 +183,7 @@ body {
   border-left: 1px solid #18182a;
 }
 
-.cs-user-info {
-  text-align: right;
-}
+.cs-user-info { text-align: right; }
 
 .cs-user-name {
   font-family: 'Syne', sans-serif;
@@ -318,10 +192,7 @@ body {
   color: #c4c4de;
 }
 
-.cs-user-role {
-  font-size: 9.5px;
-  color: #36364e;
-}
+.cs-user-role { font-size: 9.5px; color: #36364e; }
 
 .cs-user-avatar {
   width: 33px;
@@ -337,6 +208,148 @@ body {
   flex-shrink: 0;
 }
 
+/* ══════════════════════════════════════════════════════════
+   NOTIFICATION BELL & MODAL
+   ══════════════════════════════════════════════════════════ */
+.cs-notif-wrap { position: relative; }
+
+.cs-bell-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #e05252;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #111119;
+  pointer-events: none;
+}
+
+/* Backdrop */
+.cs-notif-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: transparent;
+}
+
+/* Modal */
+.cs-notif-modal {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 310px;
+  background: #0f0f1e;
+  border: 1px solid #20203a;
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  animation: fadeIn 0.18s ease;
+  overflow: hidden;
+  z-index: 201;
+}
+
+.cs-notif-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid #16162a;
+}
+
+.cs-notif-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: #d0d0e8;
+}
+
+.cs-notif-mark-all {
+  background: none;
+  border: none;
+  font-size: 10.5px;
+  color: #7c6af7;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  transition: color 0.15s;
+}
+
+.cs-notif-mark-all:hover { color: #9080f0; }
+
+.cs-notif-list { padding: 8px 0; max-height: 290px; overflow-y: auto; }
+
+.cs-notif-empty {
+  text-align: center;
+  padding: 22px;
+  color: #36364e;
+  font-size: 12px;
+}
+
+.cs-notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 16px;
+  transition: background 0.15s;
+  cursor: default;
+}
+
+.cs-notif-item:hover { background: #141428; }
+
+.cs-notif-item.unread { background: #13131f; }
+
+.cs-notif-dot-wrap {
+  width: 10px;
+  flex-shrink: 0;
+  padding-top: 5px;
+}
+
+.cs-notif-unread-dot {
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #7c6af7;
+}
+
+.cs-notif-body { flex: 1; }
+
+.cs-notif-item-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #c4c4de;
+  margin-bottom: 2px;
+}
+
+.cs-notif-item-body {
+  font-size: 11px;
+  color: #5b5b77;
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
+
+.cs-notif-item-time {
+  font-size: 10px;
+  color: #36364e;
+}
+
+/* ══════════════════════════════════════════════════════════
+   BODY (messages + input)
+   ══════════════════════════════════════════════════════════ */
+.cs-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
 /* Session label */
 .cs-session-label {
   text-align: center;
@@ -347,18 +360,14 @@ body {
   text-transform: uppercase;
 }
 
-/* ══════════════════════════════════════════════════════════
-   MESSAGES AREA
-   ══════════════════════════════════════════════════════════ */
+/* ── Messages ─────────────────────────────────────────────── */
 .cs-messages {
   flex: 1;
   overflow-y: auto;
   padding: 16px 36px 8px;
 }
 
-.cs-messages.empty {
-  padding: 0;
-}
+.cs-messages.empty { padding: 0; }
 
 /* Empty state */
 .cs-empty-state {
@@ -435,7 +444,7 @@ body {
   animation: fadeUp 0.22s ease both;
 }
 
-.cs-msg.user  { align-items: flex-end; }
+.cs-msg.user      { align-items: flex-end; }
 .cs-msg.assistant { align-items: flex-start; }
 
 .cs-msg-header {
@@ -518,17 +527,10 @@ body {
   transition: color 0.15s, background 0.15s;
 }
 
-.cs-action-btn:hover {
-  color: #9080f0;
-  background: #18182e;
-}
+.cs-action-btn:hover { color: #9080f0; background: #18182e; }
 
 /* ── Typing Dots ──────────────────────────────────────────── */
-.cs-dots {
-  display: inline-flex;
-  gap: 4px;
-  align-items: center;
-}
+.cs-dots { display: inline-flex; gap: 4px; align-items: center; }
 
 .cs-dot {
   width: 5px;
@@ -567,14 +569,131 @@ body {
 }
 
 /* ══════════════════════════════════════════════════════════
-   INPUT BAR
+   INPUT BAR AREA
    ══════════════════════════════════════════════════════════ */
 .cs-input-wrap {
-  padding: 12px 36px 18px;
+  padding: 10px 36px 18px;
   border-top: 1px solid #16162a;
+  flex-shrink: 0;
+  position: relative;
+}
+
+/* Uploads toggle row */
+.cs-uploads-toggle-row {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 8px;
+}
+
+.cs-uploads-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: #17172a;
+  border: 1px solid #20203a;
+  border-radius: 20px;
+  padding: 4px 12px 4px 9px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #5b5b7a;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.15s;
+}
+
+.cs-uploads-toggle-btn:hover {
+  background: #1e1e30;
+  border-color: #7c6af7;
+  color: #9080f0;
+}
+
+.cs-uploads-count {
+  background: #7c6af7;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 10px;
+  line-height: 1.4;
+}
+
+/* ── Uploads Drawer ──────────────────────────────────────── */
+.cs-uploads-drawer {
+  background: #0f0f1e;
+  border: 1px solid #20203a;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  overflow: hidden;
+  animation: drawerSlide 0.18s ease;
+}
+
+.cs-uploads-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px 8px;
+  border-bottom: 1px solid #16162a;
+}
+
+.cs-uploads-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 12.5px;
+  color: #c4c4de;
+}
+
+.cs-uploads-hint {
+  font-size: 10.5px;
+  color: #36364e;
+  padding: 5px 14px 6px;
+  border-bottom: 1px solid #16162a;
+}
+
+.cs-uploads-link {
+  color: #7c6af7;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.cs-uploads-link:hover { text-decoration: underline; }
+
+.cs-uploads-list {
+  padding: 6px 0;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.cs-upload-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px;
+  transition: background 0.15s;
+  cursor: default;
+}
+
+.cs-upload-item:hover { background: #141428; }
+
+.cs-upload-icon {
+  color: #7c6af7;
+  display: flex;
   flex-shrink: 0;
 }
 
+.cs-upload-info { flex: 1; min-width: 0; }
+
+.cs-upload-name {
+  font-size: 12px;
+  color: #c4c4de;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cs-upload-meta { font-size: 10px; color: #36364e; margin-top: 1px; }
+
+/* ── Input box ──────────────────────────────────────────── */
 .cs-input-box {
   display: flex;
   align-items: flex-end;
@@ -584,6 +703,11 @@ body {
   padding: 10px 11px 10px 14px;
   border: 1px solid #20203a;
   transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.cs-input-box:focus-within {
+  border-color: #2d2d4a;
+  box-shadow: 0 0 0 2px rgba(124, 106, 247, 0.07);
 }
 
 .cs-input-box.loading {
@@ -599,11 +723,26 @@ body {
   padding: 5px;
   display: flex;
   align-items: center;
+  position: relative;
   transition: color 0.15s;
 }
 
-.cs-input-icon-btn:hover {
-  color: #9080f0;
+.cs-input-icon-btn:hover { color: #9080f0; }
+
+/* Mic active state */
+.cs-mic-btn.active { color: #e05252; }
+
+.cs-mic-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(224, 82, 82, 0.25);
+  transform: translate(-50%, -50%);
+  animation: pulseRing 1.2s ease-out infinite;
+  pointer-events: none;
 }
 
 .cs-textarea {
@@ -622,19 +761,10 @@ body {
   transition: opacity 0.15s;
 }
 
-.cs-textarea:disabled {
-  opacity: 0.5;
-}
+.cs-textarea:disabled { opacity: 0.5; }
+.cs-textarea::placeholder { color: #404060; }
 
-.cs-textarea::placeholder {
-  color: #404060;
-}
-
-.cs-input-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
+.cs-input-actions { display: flex; align-items: center; gap: 6px; }
 
 .cs-send-btn {
   width: 36px;
@@ -663,7 +793,7 @@ body {
   transform: scale(0.96);
 }
 
-/* Input hint bar */
+/* Input hint */
 .cs-input-hint {
   text-align: center;
   margin-top: 7px;
@@ -679,7 +809,4 @@ body {
   color: #ebebee;
 }
 
-.cs-mode-label {
-  color: #7c6af7;
-  font-weight: 600;
-}
+.cs-mode-label { color: #7c6af7; font-weight: 600; }
