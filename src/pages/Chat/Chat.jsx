@@ -59,13 +59,11 @@ const Icons = {
   Copy:     <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" strokeWidth="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" strokeWidth="2"/></svg>,
   Check:    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
   Retry:    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
-  Bell:     <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
   ChevUp:   <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M18 15l-6-6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
   ChevDown: <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
   File:     <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" strokeWidth="2"/><polyline points="14 2 14 8 20 8" stroke="currentColor" strokeWidth="2"/></svg>,
   Close:    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>,
   Logo:     <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
-  Search:   <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/><path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>,
 };
 
 const SUGGESTIONS = [
@@ -75,12 +73,7 @@ const SUGGESTIONS = [
   "Generate a summary report",
 ];
 
-// ── Mock notifications (replace with real data source) ─────
-const MOCK_NOTIFICATIONS = [
-  { id: 1, title: "Analysis Complete",   body: "Your document synthesis finished successfully.", time: "2m ago",  unread: true  },
-  { id: 2, title: "New Upload Detected", body: "Paper_2024_v2.pdf was added to your library.",   time: "14m ago", unread: true  },
-  { id: 3, title: "Contradiction Found", body: "3 contradictions found across uploaded papers.",  time: "1h ago",  unread: false },
-];
+
 
 // ── Mock uploads (replace with real import from Upload page) ─
 // In your project, import this from src/pages/Upload or fetch via API.
@@ -154,38 +147,6 @@ function ErrBanner({ msg, onClose }) {
   );
 }
 
-// ── Notifications Modal ────────────────────────────────────
-function NotifModal({ notifications, onClose, onMarkAll }) {
-  return (
-    <div className="cs-notif-backdrop" onClick={onClose}>
-      <div className="cs-notif-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="cs-notif-header">
-          <span className="cs-notif-title">Notifications</span>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <button className="cs-notif-mark-all" onClick={onMarkAll}>Mark all read</button>
-            <button className="cs-icon-btn-sm" onClick={onClose}>{Icons.Close}</button>
-          </div>
-        </div>
-        <div className="cs-notif-list">
-          {notifications.length === 0 ? (
-            <div className="cs-notif-empty">No notifications yet.</div>
-          ) : notifications.map((n) => (
-            <div key={n.id} className={`cs-notif-item ${n.unread ? "unread" : ""}`}>
-              <div className="cs-notif-dot-wrap">
-                {n.unread && <span className="cs-notif-unread-dot" />}
-              </div>
-              <div className="cs-notif-body">
-                <div className="cs-notif-item-title">{n.title}</div>
-                <div className="cs-notif-item-body">{n.body}</div>
-                <div className="cs-notif-item-time">{n.time}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ── Uploads Drawer ─────────────────────────────────────────
 function UploadsDrawer({ uploads, onClose }) {
@@ -220,18 +181,15 @@ export default function Chat() {
   const [messages,      setMessages]      = useState([]);
   const [input,         setInput]         = useState("");
   const [loading,       setLoading]       = useState(false);
-  const [stream,        setStream]        = useState(true);
   const [error,         setError]         = useState(null);
+
+  const stream = true;
 
   // Speech-to-text
   const [listening,     setListening]     = useState(false);
   const recognitionRef                    = useRef(null);
 
-  // Notifications
-  const [notifOpen,     setNotifOpen]     = useState(false);
-  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
-  const unreadCount = notifications.filter((n) => n.unread).length;
-
+  
   // Uploads drawer
   const [uploadsOpen,   setUploadsOpen]   = useState(false);
   // Replace MOCK_UPLOADS with your real data: import from Upload page or fetch
@@ -349,66 +307,6 @@ export default function Chat() {
   return (
     <div className="cs-chat-root">
 
-      {/* ══ HEADER ══ */}
-      <header className="cs-header">
-
-        {/* Search */}
-        <div className="cs-search-box">
-          <span className="cs-search-icon">{Icons.Search}</span>
-          <input className="cs-search-input" placeholder="Search research notes…" />
-        </div>
-
-        {/* Right controls */}
-        <div className="cs-header-right">
-
-          {/* Stream / Full toggle */}
-          <div className="cs-mode-toggle">
-            {[{ label: "Stream", val: true }, { label: "Full", val: false }].map(({ label, val }) => (
-              <button
-                key={label}
-                className={`cs-mode-btn ${stream === val ? "active" : ""}`}
-                onClick={() => setStream(val)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          {/* Status */}
-          <div className="cs-status">
-            <span className="cs-status-dot" />
-            <span className="cs-status-label">System Active</span>
-          </div>
-
-          {/* Bell with badge */}
-          <div className="cs-notif-wrap">
-            <button
-              className="cs-icon-btn"
-              onClick={() => { setNotifOpen((p) => !p); setUploadsOpen(false); }}
-            >
-              {Icons.Bell}
-              {unreadCount > 0 && <span className="cs-bell-badge">{unreadCount}</span>}
-            </button>
-
-            {notifOpen && (
-              <NotifModal
-                notifications={notifications}
-                onClose={() => setNotifOpen(false)}
-                onMarkAll={() => setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })))}
-              />
-            )}
-          </div>
-
-          {/* User */}
-          <div className="cs-user">
-            <div className="cs-user-info">
-              <div className="cs-user-name">User_name</div>
-              <div className="cs-user-role">User_role</div>
-            </div>
-            <div className="cs-user-avatar">U</div>
-          </div>
-        </div>
-      </header>
 
       {/* ══ BODY ══ */}
       <div className="cs-body">
@@ -460,7 +358,7 @@ export default function Chat() {
           <div className="cs-uploads-toggle-row">
             <button
               className="cs-uploads-toggle-btn"
-              onClick={() => { setUploadsOpen((p) => !p); setNotifOpen(false); }}
+              onClick={() => setUploadsOpen((p) => !p)}
               title="View uploads"
             >
               {uploadsOpen ? Icons.ChevDown : Icons.ChevUp}

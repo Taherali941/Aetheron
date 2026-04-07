@@ -57,287 +57,6 @@ body {
   overflow: hidden;
 }
 
-/* ══════════════════════════════════════════════════════════
-   HEADER
-   ══════════════════════════════════════════════════════════ */
-.cs-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 28px;
-  border-bottom: 1px solid #16162a;
-  background: #111119;
-  flex-shrink: 0;
-}
-
-.cs-search-box {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #17172a;
-  border-radius: 9px;
-  padding: 7px 13px;
-  width: 270px;
-  border: 1px solid #20203a;
-}
-
-.cs-search-icon { color: #36364e; display: flex; }
-
-.cs-search-input {
-  background: none;
-  border: none;
-  outline: none;
-  color: #36364e;
-  font-size: 12.5px;
-  width: 100%;
-  font-family: 'DM Sans', sans-serif;
-}
-
-.cs-header-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-/* Stream / Full toggle */
-.cs-mode-toggle {
-  display: flex;
-  align-items: center;
-  background: #17172a;
-  border: 1px solid #20203a;
-  border-radius: 8px;
-  padding: 3px 4px;
-  gap: 3px;
-}
-
-.cs-mode-btn {
-  padding: 4px 11px;
-  border-radius: 6px;
-  border: none;
-  color: #484868;
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: 'DM Sans', sans-serif;
-  transition: all 0.15s;
-  background: transparent;
-}
-
-.cs-mode-btn:hover { background: #252540; }
-.cs-mode-btn.active { background: #7c6af7; color: #fff; }
-
-/* Status */
-.cs-status { display: flex; align-items: center; gap: 5px; }
-
-.cs-status-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #4ade80;
-  display: inline-block;
-}
-
-.cs-status-label { color: #484868; font-size: 11.5px; }
-
-/* Icon button */
-.cs-icon-btn {
-  position: relative;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: #17172a;
-  border: 1px solid #20203a;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: #484868;
-  transition: all 0.15s;
-}
-
-.cs-icon-btn:hover { background: #1a1a2e; color: #9080f0; }
-
-/* Small icon button (used in modals/drawers) */
-.cs-icon-btn-sm {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-  background: transparent;
-  border: 1px solid #20203a;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: #484868;
-  transition: all 0.15s;
-}
-
-.cs-icon-btn-sm:hover { background: #1a1a2e; color: #9080f0; }
-
-/* User */
-.cs-user {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding-left: 10px;
-  border-left: 1px solid #18182a;
-}
-
-.cs-user-info { text-align: right; }
-
-.cs-user-name {
-  font-family: 'Syne', sans-serif;
-  font-weight: 700;
-  font-size: 12.5px;
-  color: #c4c4de;
-}
-
-.cs-user-role { font-size: 9.5px; color: #36364e; }
-
-.cs-user-avatar {
-  width: 33px;
-  height: 33px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #7c6af7, #e05252);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-weight: 700;
-  font-size: 13px;
-  flex-shrink: 0;
-}
-
-/* ══════════════════════════════════════════════════════════
-   NOTIFICATION BELL & MODAL
-   ══════════════════════════════════════════════════════════ */
-.cs-notif-wrap { position: relative; }
-
-.cs-bell-badge {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #e05252;
-  color: #fff;
-  font-size: 9px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid #111119;
-  pointer-events: none;
-}
-
-/* Backdrop */
-.cs-notif-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 200;
-  background: transparent;
-}
-
-/* Modal */
-.cs-notif-modal {
-  position: absolute;
-  top: calc(100% + 10px);
-  right: 0;
-  width: 310px;
-  background: #0f0f1e;
-  border: 1px solid #20203a;
-  border-radius: 14px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
-  animation: fadeIn 0.18s ease;
-  overflow: hidden;
-  z-index: 201;
-}
-
-.cs-notif-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 16px 10px;
-  border-bottom: 1px solid #16162a;
-}
-
-.cs-notif-title {
-  font-family: 'Syne', sans-serif;
-  font-weight: 700;
-  font-size: 13px;
-  color: #d0d0e8;
-}
-
-.cs-notif-mark-all {
-  background: none;
-  border: none;
-  font-size: 10.5px;
-  color: #7c6af7;
-  cursor: pointer;
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 600;
-  transition: color 0.15s;
-}
-
-.cs-notif-mark-all:hover { color: #9080f0; }
-
-.cs-notif-list { padding: 8px 0; max-height: 290px; overflow-y: auto; }
-
-.cs-notif-empty {
-  text-align: center;
-  padding: 22px;
-  color: #36364e;
-  font-size: 12px;
-}
-
-.cs-notif-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 10px 16px;
-  transition: background 0.15s;
-  cursor: default;
-}
-
-.cs-notif-item:hover { background: #141428; }
-
-.cs-notif-item.unread { background: #13131f; }
-
-.cs-notif-dot-wrap {
-  width: 10px;
-  flex-shrink: 0;
-  padding-top: 5px;
-}
-
-.cs-notif-unread-dot {
-  display: block;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #7c6af7;
-}
-
-.cs-notif-body { flex: 1; }
-
-.cs-notif-item-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: #c4c4de;
-  margin-bottom: 2px;
-}
-
-.cs-notif-item-body {
-  font-size: 11px;
-  color: #5b5b77;
-  line-height: 1.5;
-  margin-bottom: 4px;
-}
-
-.cs-notif-item-time {
-  font-size: 10px;
-  color: #36364e;
-}
 
 /* ══════════════════════════════════════════════════════════
    BODY (messages + input)
@@ -359,6 +78,25 @@ body {
   color: #26263e;
   text-transform: uppercase;
 }
+
+/* Small icon button (used in modals/drawers) */
+.cs-icon-btn-sm {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid #20203a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #484868;
+  transition: all 0.15s;
+}
+
+.cs-icon-btn-sm:hover { background: #1a1a2e; color: #9080f0; }
+
+
 
 /* ── Messages ─────────────────────────────────────────────── */
 .cs-messages {
