@@ -1,0 +1,559 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+/* ── Reset & Base ─────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #111119;
+  font-family: 'DM Sans', sans-serif;
+  color: #dcdcf0;
+}
+
+/* ── Scrollbar ────────────────────────────────────────────── */
+::-webkit-scrollbar        { width: 3px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: #222236; border-radius: 4px; }
+
+/* ── Animations ───────────────────────────────────────────── */
+@keyframes bounce {
+  0%, 80%, 100% { transform: translateY(0);   opacity: 0.4; }
+  40%           { transform: translateY(-5px); opacity: 1;   }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+
+@keyframes pulseRing {
+  0%   { transform: scale(1);   opacity: 0.8; }
+  100% { transform: scale(2.2); opacity: 0;   }
+}
+
+@keyframes drawerSlide {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+
+/* ══════════════════════════════════════════════════════════
+   ROOT — full height, column layout (no sidebar)
+   ══════════════════════════════════════════════════════════ */
+.cs-chat-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #131b2e;
+  color: #dcdcf0;
+  font-family: 'DM Sans', sans-serif;
+  overflow: hidden;
+}
+
+
+/* ══════════════════════════════════════════════════════════
+   BODY (messages + input)
+   ══════════════════════════════════════════════════════════ */
+.cs-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* Session label */
+.cs-session-label {
+  text-align: center;
+  padding: 10px 0 2px;
+  font-size: 9.5px;
+  letter-spacing: 2px;
+  color: #26263e;
+  text-transform: uppercase;
+}
+
+/* Small icon button (used in modals/drawers) */
+.cs-icon-btn-sm {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid #20203a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #484868;
+  transition: all 0.15s;
+}
+
+.cs-icon-btn-sm:hover { background: #1a1a2e; color: #9080f0; }
+
+
+
+/* ── Messages ─────────────────────────────────────────────── */
+.cs-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 36px 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.cs-messages.empty { padding: 0; }
+
+/* Empty state */
+.cs-empty-state {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 40px;
+  flex: 1;
+}
+
+.cs-empty-icon {
+  width: 66px;
+  height: 66px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #7c6af7, #4a39c4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 30px;
+  box-shadow: 0 8px 36px rgba(124, 106, 247, 0.3);
+}
+
+.cs-empty-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 26px;
+  color: #d0d0e8;
+  letter-spacing: -0.5px;
+  margin-bottom: 9px;
+  text-align: center;
+}
+
+.cs-empty-subtitle {
+  color: #5b5b77;
+  font-size: 13.5px;
+  line-height: 1.7;
+  max-width: 380px;
+  text-align: center;
+}
+
+.cs-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.cs-chip {
+  padding: 7px 16px;
+  background: #17172a;
+  border: 1px solid #20203a;
+  border-radius: 20px;
+  font-size: 12.5px;
+  color: #606080;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.15s;
+}
+
+.cs-chip:hover {
+  background: #1e1e30;
+  border-color: #7c6af7;
+  color: #9080f0;
+}
+
+/* ── Message Bubble ───────────────────────────────────────── */
+.cs-msg {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 18px;
+  animation: fadeUp 0.22s ease both;
+}
+
+.cs-msg.user      { align-items: flex-end; }
+.cs-msg.assistant { align-items: flex-start; }
+
+.cs-msg-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 7px;
+}
+
+.cs-msg-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: linear-gradient(135deg, #7c6af7, #4f3fbf);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.cs-msg-role-label {
+  font-size: 10px;
+  color: #50506a;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.cs-bubble {
+  max-width: 680px;
+  padding: 13px 17px;
+  font-size: 13.5px;
+  line-height: 1.75;
+  word-break: break-word;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+  color: #c4c4de;
+}
+
+.cs-bubble.user {
+  max-width: 520px;
+  background: #1e1e32;
+  border-radius: 16px 16px 5px 16px;
+  border: 1px solid #26263e;
+}
+
+.cs-bubble.assistant {
+  background: #16162a;
+  border-radius: 5px 16px 16px 16px;
+  border: 1px solid #20203a;
+}
+
+.cs-bubble-time {
+  font-size: 10px;
+  color: #36364e;
+  margin-top: 6px;
+  text-align: right;
+}
+
+/* Message actions */
+.cs-msg-actions {
+  display: flex;
+  gap: 2px;
+  margin-top: 5px;
+  padding-left: 2px;
+}
+
+.cs-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  color: #3a3a52;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-family: 'DM Sans', sans-serif;
+  transition: color 0.15s, background 0.15s;
+}
+
+.cs-action-btn:hover { color: #9080f0; background: #18182e; }
+
+/* ── Typing Dots ──────────────────────────────────────────── */
+.cs-dots { display: inline-flex; gap: 4px; align-items: center; }
+
+.cs-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #7c6af7;
+  display: inline-block;
+  animation: bounce 1.3s infinite ease-in-out;
+}
+
+.cs-dot:nth-child(1) { animation-delay: 0s;    }
+.cs-dot:nth-child(2) { animation-delay: 0.18s; }
+.cs-dot:nth-child(3) { animation-delay: 0.36s; }
+
+/* ── Error Banner ─────────────────────────────────────────── */
+.cs-error {
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  background: #1e0e0e;
+  border: 1px solid #4a1a1a;
+  border-radius: 10px;
+  color: #d06060;
+  font-size: 12.5px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cs-error-close {
+  background: none;
+  border: none;
+  color: #d06060;
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+}
+
+/* ══════════════════════════════════════════════════════════
+   INPUT BAR AREA
+   ══════════════════════════════════════════════════════════ */
+.cs-input-wrap {
+  padding: 10px 36px 18px;
+  border-top: 1px solid rgb(73, 73, 73);
+  flex-shrink: 0;
+  background: #131b2e;
+  
+}
+
+/* Uploads toggle row */
+.cs-uploads-toggle-row {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 8px;
+}
+
+.cs-uploads-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: #17172a;
+  border: 1px solid #20203a;
+  border-radius: 20px;
+  padding: 4px 12px 4px 9px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #5b5b7a;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.15s;
+}
+
+.cs-uploads-toggle-btn:hover {
+  background: #1e1e30;
+  border-color: #7c6af7;
+  color: #9080f0;
+}
+
+.cs-uploads-count {
+  background: #7c6af7;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 10px;
+  line-height: 1.4;
+}
+
+/* ── Uploads Drawer ──────────────────────────────────────── */
+.cs-uploads-drawer {
+  background: #0f0f1e;
+  border: 1px solid #20203a;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  overflow: hidden;
+  animation: drawerSlide 0.18s ease;
+}
+
+.cs-uploads-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px 8px;
+  border-bottom: 1px solid #16162a;
+}
+
+.cs-uploads-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 12.5px;
+  color: #c4c4de;
+}
+
+.cs-uploads-hint {
+  font-size: 10.5px;
+  color: #36364e;
+  padding: 5px 14px 6px;
+  border-bottom: 1px solid #16162a;
+}
+
+.cs-uploads-link {
+  color: #7c6af7;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.cs-uploads-link:hover { text-decoration: underline; }
+
+.cs-uploads-list {
+  padding: 6px 0;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.cs-upload-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px;
+  transition: background 0.15s;
+  cursor: default;
+}
+
+.cs-upload-item:hover { background: #141428; }
+
+.cs-upload-icon {
+  color: #7c6af7;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.cs-upload-info { flex: 1; min-width: 0; }
+
+.cs-upload-name {
+  font-size: 12px;
+  color: #c4c4de;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cs-upload-meta { font-size: 10px; color: #36364e; margin-top: 1px; }
+
+/* ── Input box ──────────────────────────────────────────── */
+.cs-input-box {
+  display: flex;
+  align-items: flex-end;
+  gap: 9px;
+  background: #16162a;
+  border-radius: 14px;
+  padding: 10px 11px 10px 14px;
+  border: 1px solid #20203a;
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.cs-input-box:focus-within {
+  border-color: #2d2d4a;
+  box-shadow: 0 0 0 2px rgba(124, 106, 247, 0.07);
+}
+
+.cs-input-box.loading {
+  border-color: #7c6af7;
+  box-shadow: 0 0 0 3px rgba(124, 106, 247, 0.1);
+}
+
+.cs-input-icon-btn {
+  background: none;
+  border: none;
+  color: #404060;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  position: relative;
+  transition: color 0.15s;
+}
+
+.cs-input-icon-btn:hover { color: #9080f0; }
+
+/* Mic active state */
+.cs-mic-btn.active { color: #e05252; }
+
+.cs-mic-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(224, 82, 82, 0.25);
+  transform: translate(-50%, -50%);
+  animation: pulseRing 1.2s ease-out infinite;
+  pointer-events: none;
+}
+
+.cs-textarea {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: #c4c4de;
+  font-size: 13.5px;
+  resize: none;
+  font-family: 'DM Sans', sans-serif;
+  line-height: 1.65;
+  
+  /* These control the expansion limit */
+  min-height: 24px; 
+  max-height: 200px; /* Increased slightly for better long-form drafting */
+  
+  overflow-y: auto;
+  scrollbar-width: thin;
+  transition: opacity 0.15s;
+
+}
+
+.cs-textarea:disabled { opacity: 0.5; }
+.cs-textarea::placeholder { color: #404060; }
+
+.cs-input-actions { display: flex; align-items: center; gap: 6px; }
+
+.cs-send-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: #1e1e32;
+  color: #36365a;
+  box-shadow: none;
+}
+
+.cs-send-btn.active {
+  background: linear-gradient(135deg, #7c6af7, #4a39c4);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(124, 106, 247, 0.35);
+}
+
+.cs-send-btn.active:hover {
+  filter: brightness(1.15);
+  transform: scale(0.96);
+}
+
+/* Input hint */
+.cs-input-hint {
+  text-align: center;
+  margin-top: 7px;
+  font-size: 10px;
+  color: #5b5b77;
+}
+
+.cs-kbd {
+  background: #191928;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 9px;
+  color: #ebebee;
+}
+
+.cs-mode-label { color: #7c6af7; font-weight: 600; }

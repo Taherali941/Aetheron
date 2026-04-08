@@ -7,7 +7,8 @@ import Ideas from "../pages/Ideas/Ideas";
 const AppRoutes = () => {
   return (
     //this routes dont support in gh pages only support in vercel
-    <BrowserRouter>
+    <BrowserRouter basename="/Aetheron" >
+
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Upload />} />
