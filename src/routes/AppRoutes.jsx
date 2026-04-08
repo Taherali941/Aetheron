@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "../layout/Layout";
-import Upload from "../pages/Upload/Upload";
+import ResearchAnalyzer from "../pages/Upload/ResearchAnalyzer";
 import Chat from "../pages/Chat/Chat";
 import Ideas from "../pages/Ideas/Ideas";
 
@@ -11,9 +11,9 @@ const AppRoutes = () => {
 
       <Routes>
         <Route path="/" element={<Layout />}>
-          <Route index element={<Upload />} />
-          <Route path="chat" element={<Chat />} />
+          <Route index element={<ResearchAnalyzer />} />
           <Route path="ideas" element={<Ideas />} />
+          <Route path="chat" element={<Chat />} />
         </Route>
       </Routes>
     </BrowserRouter>

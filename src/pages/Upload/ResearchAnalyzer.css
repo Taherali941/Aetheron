@@ -1,0 +1,515 @@
+/* ============================================================
+   ResearchAnalyzer.css
+   All selectors are prefixed with .ra-* so they never clash
+   with anything else in your React app.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&display=swap');
+
+/* ── Design tokens (scoped to component) ── */
+.ra-root {
+  --ra-bg:      #0d0f14;
+  --ra-surf:    #13161e;
+  --ra-surf2:   #1a1e2a;
+  --ra-bdr:     rgba(255, 255, 255, 0.07);
+  --ra-bdr2:    rgba(255, 255, 255, 0.14);
+  --ra-tp:      #eef0f6;
+  --ra-ts:      #7c8299;
+  --ra-tm:      #454b60;
+  --ra-blue:    #4f8ef7;
+  --ra-amber:   #f0a050;
+  --ra-emerald: #38d9a9;
+  --ra-red:     #f87171;
+  --ra-radius:  14px;
+  --ra-radius-s: 8px;
+  --ra-tr:      220ms cubic-bezier(0.4, 0, 0.2, 1);
+  --ra-font-d:  'Syne', sans-serif;
+  --ra-font-m:  'DM Mono', monospace;
+
+  font-family:    var(--ra-font-d);
+  background:     var(--ra-bg);
+  color:          var(--ra-tp);
+  padding:        2rem;
+  border-radius:  18px;
+  box-sizing:     border-box;
+  width:          100%;
+}
+
+.ra-root * {
+  box-sizing: border-box;
+}
+
+/* ── Upload wrapper ── */
+.ra-upload {
+  display:        flex;
+  flex-direction: column;
+  gap:            1rem;
+}
+
+/* ── Drop zone ── */
+.ra-dropzone {
+  border:        1.5px dashed var(--ra-bdr2);
+  border-radius: var(--ra-radius);
+  background:    var(--ra-surf);
+  cursor:        pointer;
+  outline:       none;
+  position:      relative;
+  overflow:      hidden;
+  transition:    border-color var(--ra-tr), background var(--ra-tr), box-shadow var(--ra-tr);
+}
+
+.ra-dropzone::before {
+  content:    '';
+  position:   absolute;
+  inset:      0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(79, 142, 247, 0.07) 0%, transparent 70%);
+  opacity:    0;
+  transition: opacity var(--ra-tr);
+  pointer-events: none;
+}
+
+.ra-dropzone:hover::before,
+.ra-dropzone--over::before {
+  opacity: 1;
+}
+
+.ra-dropzone:hover,
+.ra-dropzone:focus-visible {
+  border-color: var(--ra-blue);
+  box-shadow:   0 0 0 3px rgba(79, 142, 247, 0.1);
+}
+
+.ra-dropzone--over {
+  border-color: var(--ra-blue);
+  background:   rgba(79, 142, 247, 0.05);
+  box-shadow:   0 0 0 4px rgba(79, 142, 247, 0.12);
+}
+
+.ra-dropzone--has-files {
+  border-style: solid;
+  border-color: var(--ra-bdr2);
+}
+
+.ra-dropzone__inner {
+  display:        flex;
+  flex-direction: column;
+  align-items:    center;
+  padding:        2.5rem 2rem;
+  gap:            0.5rem;
+  user-select:    none;
+}
+
+.ra-dropzone__icon {
+  color:      var(--ra-blue);
+  opacity:    0.8;
+  transition: opacity var(--ra-tr), transform var(--ra-tr);
+  margin-bottom: 0.25rem;
+}
+
+.ra-dropzone:hover .ra-dropzone__icon,
+.ra-dropzone--over .ra-dropzone__icon {
+  opacity:   1;
+  transform: translateY(-3px);
+}
+
+.ra-dropzone__headline {
+  font-size:      1rem;
+  font-weight:    700;
+  color:          var(--ra-tp);
+  margin:         0;
+  letter-spacing: -0.01em;
+}
+
+.ra-dropzone__sub {
+  font-family: var(--ra-font-m);
+  font-size:   0.75rem;
+  color:       var(--ra-ts);
+  margin:      0;
+}
+
+.ra-dropzone__sub span {
+  color:                var(--ra-blue);
+  cursor:               pointer;
+  text-decoration:      underline;
+  text-underline-offset: 3px;
+}
+
+/* ── File list ── */
+.ra-filelist {
+  list-style:     none;
+  margin:         0;
+  padding:        0;
+  display:        flex;
+  flex-direction: column;
+  gap:            0.4rem;
+}
+
+.ra-filelist__item {
+  display:       flex;
+  align-items:   center;
+  gap:           0.6rem;
+  padding:       0.6rem 0.9rem;
+  background:    var(--ra-surf);
+  border:        1px solid var(--ra-bdr);
+  border-radius: var(--ra-radius-s);
+  font-family:   var(--ra-font-m);
+  font-size:     0.78rem;
+  color:         var(--ra-ts);
+  animation:     ra-slideIn 0.2s ease forwards;
+  transition:    border-color var(--ra-tr);
+}
+
+.ra-filelist__item:hover {
+  border-color: var(--ra-bdr2);
+}
+
+.ra-filelist__item svg {
+  flex-shrink: 0;
+  color:       var(--ra-tm);
+}
+
+.ra-filelist__name {
+  flex:          1;
+  overflow:      hidden;
+  text-overflow: ellipsis;
+  white-space:   nowrap;
+  color:         var(--ra-tp);
+}
+
+.ra-filelist__size {
+  color:       var(--ra-tm);
+  flex-shrink: 0;
+}
+
+.ra-filelist__remove {
+  background:   none;
+  border:       none;
+  cursor:       pointer;
+  color:        var(--ra-tm);
+  padding:      2px;
+  display:      flex;
+  align-items:  center;
+  border-radius: 4px;
+  flex-shrink:  0;
+  transition:   color var(--ra-tr), background var(--ra-tr);
+}
+
+.ra-filelist__remove:hover {
+  color:       var(--ra-red);
+  background:  rgba(248, 113, 113, 0.1);
+}
+
+/* ── Action row ── */
+.ra-actions {
+  display:     flex;
+  align-items: center;
+  gap:         0.75rem;
+  flex-wrap:   wrap;
+}
+
+.ra-actions__analyze {
+  display:        inline-flex;
+  align-items:    center;
+  gap:            0.5rem;
+  padding:        0.7rem 1.4rem;
+  background:     var(--ra-blue);
+  color:          #fff;
+  font-family:    var(--ra-font-d);
+  font-size:      0.88rem;
+  font-weight:    700;
+  border:         none;
+  border-radius:  var(--ra-radius-s);
+  cursor:         pointer;
+  letter-spacing: 0.01em;
+  transition:     opacity var(--ra-tr), box-shadow var(--ra-tr), transform var(--ra-tr);
+}
+
+.ra-actions__analyze:hover:not(:disabled) {
+  box-shadow: 0 4px 20px rgba(79, 142, 247, 0.4);
+  transform:  translateY(-1px);
+}
+
+.ra-actions__analyze:disabled {
+  opacity: 0.35;
+  cursor:  not-allowed;
+}
+
+.ra-actions__reset {
+  background:    none;
+  border:        1px solid var(--ra-bdr2);
+  color:         var(--ra-ts);
+  font-family:   var(--ra-font-d);
+  font-size:     0.82rem;
+  padding:       0.65rem 1.1rem;
+  border-radius: var(--ra-radius-s);
+  cursor:        pointer;
+  transition:    color var(--ra-tr), border-color var(--ra-tr);
+}
+
+.ra-actions__reset:hover {
+  color:        var(--ra-tp);
+  border-color: var(--ra-ts);
+}
+
+/* ── Status dot ── */
+.ra-dot {
+  width:         7px;
+  height:        7px;
+  border-radius: 50%;
+  background:    rgba(255, 255, 255, 0.3);
+  display:       inline-block;
+  transition:    background var(--ra-tr);
+  flex-shrink:   0;
+}
+
+.ra-dot--on {
+  background: #fff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.5);
+}
+
+/* ── Spinner ── */
+.ra-spinner {
+  width:         14px;
+  height:        14px;
+  border:        2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  flex-shrink:   0;
+  animation:     ra-spin 0.7s linear infinite;
+}
+
+/* ── Error banner ── */
+.ra-error {
+  display:       flex;
+  align-items:   center;
+  gap:           0.5rem;
+  padding:       0.75rem 1rem;
+  background:    rgba(248, 113, 113, 0.08);
+  border:        1px solid rgba(248, 113, 113, 0.25);
+  border-radius: var(--ra-radius-s);
+  font-family:   var(--ra-font-m);
+  font-size:     0.78rem;
+  color:         var(--ra-red);
+}
+
+/* ── Results section ── */
+.ra-results {
+  margin-top: 2.5rem;
+  animation:  ra-fadeUp 0.4s ease forwards;
+}
+
+.ra-results__label {
+  display:        flex;
+  align-items:    center;
+  gap:            1rem;
+  font-family:    var(--ra-font-m);
+  font-size:      0.68rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color:          var(--ra-tm);
+  margin-bottom:  1.25rem;
+}
+
+.ra-results__line {
+  flex:       1;
+  height:     1px;
+  background: var(--ra-bdr);
+}
+
+/* ── Cards grid ── */
+.ra-grid {
+  display:               grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap:                   1rem;
+}
+
+/* ── Single card ── */
+.ra-card {
+  background:     var(--ra-surf);
+  border:         1px solid var(--ra-bdr);
+  border-radius:  var(--ra-radius);
+  padding:        1.4rem;
+  display:        flex;
+  flex-direction: column;
+  gap:            1rem;
+  position:       relative;
+  overflow:       hidden;
+  animation:      ra-cardIn 0.45s ease var(--card-delay, 0s) both;
+  transition:     border-color var(--ra-tr), box-shadow var(--ra-tr);
+}
+
+/* Coloured top stripe using the card's accent */
+.ra-card::before {
+  content:  '';
+  position: absolute;
+  top:      0;
+  left:     0;
+  right:    0;
+  height:   2px;
+  background: var(--card-accent);
+  opacity:  0.75;
+}
+
+/* Subtle glow wash in top-left corner */
+.ra-card::after {
+  content:        '';
+  position:       absolute;
+  inset:          0;
+  background:     radial-gradient(ellipse at 0% 0%, var(--card-accent) 0%, transparent 65%);
+  opacity:        0.04;
+  pointer-events: none;
+  transition:     opacity var(--ra-tr);
+}
+
+.ra-card:hover {
+  border-color: var(--ra-bdr2);
+  box-shadow:   0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+.ra-card:hover::after {
+  opacity: 0.08;
+}
+
+/* Card header */
+.ra-card__header {
+  display:     flex;
+  align-items: flex-start;
+  gap:         0.75rem;
+}
+
+.ra-card__icon {
+  font-size:   1.1rem;
+  color:       var(--card-accent);
+  flex-shrink: 0;
+  margin-top:  1px;
+  filter:      drop-shadow(0 0 5px var(--card-accent));
+}
+
+.ra-card__title-group {
+  flex: 1;
+}
+
+.ra-card__title {
+  font-size:      0.95rem;
+  font-weight:    700;
+  color:          var(--ra-tp);
+  margin:         0 0 2px;
+  letter-spacing: -0.01em;
+}
+
+.ra-card__desc {
+  font-family: var(--ra-font-m);
+  font-size:   0.67rem;
+  color:       var(--ra-tm);
+  margin:      0;
+}
+
+.ra-card__count {
+  background:    var(--ra-surf2);
+  border:        1px solid var(--ra-bdr);
+  color:         var(--ra-ts);
+  font-family:   var(--ra-font-m);
+  font-size:     0.68rem;
+  padding:       2px 8px;
+  border-radius: 100px;
+  flex-shrink:   0;
+}
+
+/* Card list */
+.ra-card__list {
+  list-style:     none;
+  padding:        0;
+  margin:         0;
+  display:        flex;
+  flex-direction: column;
+  gap:            0.55rem;
+}
+
+.ra-card__item {
+  display:     flex;
+  align-items: flex-start;
+  gap:         0.6rem;
+  font-size:   0.83rem;
+  color:       var(--ra-ts);
+  line-height: 1.55;
+}
+
+.ra-card__item--extra {
+  animation: ra-slideIn 0.2s ease forwards;
+}
+
+.ra-card__bullet {
+  width:       5px;
+  height:      5px;
+  border-radius: 50%;
+  background:  var(--card-accent);
+  flex-shrink: 0;
+  margin-top:  7px;
+  opacity:     0.75;
+}
+
+/* Expand button */
+.ra-card__expand {
+  background:    none;
+  border:        1px solid var(--ra-bdr);
+  color:         var(--ra-tm);
+  font-family:   var(--ra-font-m);
+  font-size:     0.7rem;
+  padding:       0.35rem 0.75rem;
+  border-radius: 100px;
+  cursor:        pointer;
+  align-self:    flex-start;
+  transition:    color var(--ra-tr), border-color var(--ra-tr);
+}
+
+.ra-card__expand:hover {
+  color:        var(--card-accent);
+  border-color: var(--card-accent);
+}
+
+/* ── Keyframes ── */
+@keyframes ra-slideIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ra-fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ra-cardIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+@keyframes ra-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .ra-root {
+    padding: 1.25rem;
+  }
+
+  .ra-dropzone__inner {
+    padding: 1.75rem 1.25rem;
+  }
+
+  .ra-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ra-actions {
+    flex-direction: column;
+    align-items:    stretch;
+  }
+
+  .ra-actions__analyze,
+  .ra-actions__reset {
+    justify-content: center;
+    text-align:      center;
+    width:           100%;
+  }
+}
