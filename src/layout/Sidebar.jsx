@@ -15,7 +15,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
       {/* Nav */}
       <nav>
-        <NavLink to="/" onClick={() => setIsOpen(false)}>
+        <NavLink to="/upload" onClick={() => setIsOpen(false)}>
           Upload
         </NavLink>
 

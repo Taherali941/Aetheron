@@ -14,8 +14,8 @@ const AppRoutes = () => {
 
     <BrowserRouter basename="/Aetheron">
       <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<ResearchAnalyzer />} />
+        <Route path="/" element={<Layout />} />
+          <Route index element={<LandingPage />} />
         {/* 1. Landing Page sits outside the Layout (Full Screen) */}
         <Route path="/" element={<LandingPage />} />
 
@@ -25,13 +25,13 @@ const AppRoutes = () => {
         {/* 3. Dashboard Routes wrapped in the Layout (Sidebar starts here) */}
         <Route element={<Layout />}>
           
-        <Route path="upload" element={<Upload />} />
-        <Route path="chat" element={<Chat />} />
-        <Route path="summary" element={<Summary />} />
-        <Route path="gaps" element={<ResearchGaps />} />
-        <Route path="contradictions" element={<Contradictions />} />
-        <Route path="ideas" element={<Ideas />} />
-        <Route path="chat" element={<Chat />} />
+        <Route path="/upload" element={<ResearchAnalyzer />} />
+        <Route path="/chat" element={<Chat />} />
+        <Route path="/summary" element={<Summary />} />
+        <Route path="/gaps" element={<ResearchGaps />} />
+        <Route path="/contradictions" element={<Contradictions />} />
+        <Route path="/ideas" element={<Ideas />} />
+        <Route path="/chat" element={<Chat />} />
 
         </Route>
 
