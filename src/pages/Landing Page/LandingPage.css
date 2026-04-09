@@ -536,7 +536,7 @@
   color: #aaa;
 }
 
-/* ── Animations ───────────────────────────────────────────── */
+/* ── Animations ────────────────────────────────────────── */
 @keyframes pulseDown {
   0%   { top: 5%;  opacity: 1;   }
   100% { top: 85%; opacity: 0.3; }
