@@ -276,3 +276,43 @@ const IdeaGeneratorPage = ({
 
 export default IdeaGeneratorPage;
 export { IdeaCard };
+
+
+/**
+ * ══════════════════════════════════════════════════════════
+ * BACKEND API ENDPOINTS SUMMARY (Idea Generator Integration)
+ * ══════════════════════════════════════════════════════════
+ * * BASE URL: (Uses relative path or proxy)
+ * * 1. IDEAS GENERATION ENDPOINT
+ * - Route:  /ideas
+ * - Method: POST
+ * - Payload Type: application/json
+ * - Request Body: 
+ * { "topic": "string" } // topic is optional/nullable
+ * - Expected Response: 
+ * { "ideas": "string" } 
+ * - Note: The "ideas" field should be a raw text block containing 
+ * multiple startup concepts separated by double newlines.
+ * * ══════════════════════════════════════════════════════════
+ * IMPLEMENTATION DETAILS FOR BACKEND TEAM
+ * ══════════════════════════════════════════════════════════
+ * * [Data Parsing Logic]
+ * The frontend includes a heuristic parser (parseIdeasText) that 
+ * looks for specific labels in your text response. For best 
+ * results, the "ideas" string should follow this format:
+ * * Title: [Concept Name]
+ * Problem: [Description]
+ * Solution: [Description]
+ * Impact: [Description]
+ * Category: [INFRASTRUCTURE | HEALTHTECH | etc.]
+ * * * [PDF Handling]
+ * Currently, 'pdfFiles' are managed in local state for the UI, 
+ * but the handleGenerate function is only sending the "topic". 
+ * Ensure the backend is either:
+ * a) Already processing previously uploaded files in the session.
+ * b) Updated to receive files alongside the topic if state is stateless.
+ * * * [Error Handling]
+ * The frontend expects a JSON error object on non-200 status:
+ * { "message": "Detailed error description" }
+ * * ══════════════════════════════════════════════════════════
+ */
