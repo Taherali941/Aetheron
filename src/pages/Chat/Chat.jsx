@@ -1,39 +1,36 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import "./Chat.css";
 
-// ══════════════════════════════════════════════════════════
-// API CONFIG — RAG backend (FastAPI)
-// ══════════════════════════════════════════════════════════
 const API_CONFIG = {
-  BASE_URL:        "http://localhost:8000",
+  BASE_URL: "http://localhost:8000",
   UPLOAD_ENDPOINT: "/upload",
-  QUERY_ENDPOINT:  "/query",
+  QUERY_ENDPOINT: "/query",
 };
 
-// POST /query  →  { answer: string, sources: string[] }
-async function queryRAG(question) {
+async function queryRAG(question, sessionId) {
+  const body = { question };
+  if (sessionId) body.session_id = sessionId;
   const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.QUERY_ENDPOINT}`, {
-    method:  "POST",
+    method: "POST",
     headers: { "Content-Type": "application/json" },
-    body:    JSON.stringify({ question }),
+    body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
 
-// POST /upload  →  multipart form-data
 async function uploadFiles(files) {
   const form = new FormData();
   for (const f of files) form.append("files", f);
   const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.UPLOAD_ENDPOINT}`, {
     method: "POST",
-    body:   form,
+    body: form,
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
 
-// ── SVG Icons ──────────────────────────────────────────────
 const Icons = {
   Send:     <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
   Attach:   <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
@@ -48,29 +45,21 @@ const Icons = {
   Close:    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>,
   Logo:     <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
   Source:   <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  Idea:     <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M9 18h6M10 22h4M12 2a7 7 0 017 7c0 2.5-1.3 4.7-3.2 6l-.8.5V18H9v-2.5l-.8-.5A7 7 0 0112 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
 };
 
-// Research tool actions (replaces generic SUGGESTIONS)
 const RESEARCH_ACTIONS = [
-  { label: "Synthesize Papers",   query: "Synthesize the key themes and findings across all uploaded papers.", primary: true  },
-  { label: "Identify Gaps",       query: "Identify the research gaps and open questions in the uploaded documents.", primary: false },
-  { label: "Find Contradictions", query: "Find key contradictions or conflicting claims across the uploaded documents.", primary: false },
-  { label: "Generate Summary",    query: "Generate a comprehensive summary of all uploaded documents.", primary: false },
-];
-
-// TODO: Replace MOCK_UPLOADS with real data imported/fetched from Upload page
-const MOCK_UPLOADS = [
-  { id: 1, name: "Paper_2024_v2.pdf",          size: "1.2 MB", date: "Apr 6" },
-  { id: 2, name: "LiteratureReview_final.pdf", size: "3.4 MB", date: "Apr 5" },
-  { id: 3, name: "Dataset_annotations.csv",    size: "780 KB", date: "Apr 4" },
-  { id: 4, name: "Methodology_notes.docx",     size: "210 KB", date: "Apr 3" },
+  { label: "Synthesize Papers",  query: "...", primary: true,  navigate: null },
+  { label: "Generate Summary",    query: null, primary: false, navigate: "/summary" }, 
+  { label: "Identify Gaps",       query: null, primary: false, navigate: "/gaps" },   
+  { label: "Find Contradictions", query: null, primary: false, navigate: "/contradictions" }, 
+  { label: "Generate Idea",       query: "...", primary: false, navigate: "/ideas"  },
 ];
 
 function fmtTime(d) {
   return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-// ── Typing Dots ────────────────────────────────────────────
 function Dots() {
   return (
     <span className="cs-dots">
@@ -81,7 +70,6 @@ function Dots() {
   );
 }
 
-// ── Source Pills (shown under assistant answer) ────────────
 function SourcePills({ sources }) {
   if (!sources || sources.length === 0) return null;
   return (
@@ -103,7 +91,6 @@ function SourcePills({ sources }) {
   );
 }
 
-// ── Message Bubble ─────────────────────────────────────────
 function Msg({ msg, onRetry }) {
   const [copied, setCopied] = useState(false);
   const isUser = msg.role === "user";
@@ -128,7 +115,6 @@ function Msg({ msg, onRetry }) {
         <div className="cs-bubble-time">{fmtTime(msg.ts)}</div>
       </div>
 
-      {/* Sources from RAG */}
       {!isUser && !msg.typing && msg.sources?.length > 0 && (
         <SourcePills sources={msg.sources} />
       )}
@@ -148,7 +134,6 @@ function Msg({ msg, onRetry }) {
   );
 }
 
-// ── Error Banner ───────────────────────────────────────────
 function ErrBanner({ msg, onClose }) {
   return (
     <div className="cs-error">
@@ -158,7 +143,6 @@ function ErrBanner({ msg, onClose }) {
   );
 }
 
-// ── Uploads Drawer ─────────────────────────────────────────
 function UploadsDrawer({ uploads, onClose }) {
   return (
     <div className="cs-uploads-drawer">
@@ -173,8 +157,8 @@ function UploadsDrawer({ uploads, onClose }) {
         {uploads.length === 0 ? (
           <div className="cs-uploads-empty">No files uploaded yet.</div>
         ) : (
-          uploads.map((f) => (
-            <div key={f.id} className="cs-upload-item">
+          uploads.map((f, i) => (
+            <div key={f.id ?? i} className="cs-upload-item">
               <div className="cs-upload-icon">{Icons.File}</div>
               <div className="cs-upload-info">
                 <div className="cs-upload-name" title={f.name}>{f.name}</div>
@@ -188,9 +172,6 @@ function UploadsDrawer({ uploads, onClose }) {
   );
 }
 
-// ══════════════════════════════════════════════════════════
-// MAIN CHAT COMPONENT
-// ══════════════════════════════════════════════════════════
 export default function Chat() {
   const [messages,    setMessages]    = useState([]);
   const [input,       setInput]       = useState("");
@@ -198,19 +179,20 @@ export default function Chat() {
   const [error,       setError]       = useState(null);
   const [listening,   setListening]   = useState(false);
   const [uploadsOpen, setUploadsOpen] = useState(false);
+  const [uploads,     setUploads]     = useState([]);
+  const [sessionId,   setSessionId]   = useState(null);
+  const [uploadMsg,   setUploadMsg]   = useState(null);
 
-  // TODO: Replace MOCK_UPLOADS with real data imported/fetched from Upload page
-  const uploads = MOCK_UPLOADS;
-
+  const navigate = useNavigate();
   const bottomRef      = useRef(null);
   const taRef          = useRef(null);
   const recognitionRef = useRef(null);
+  const fileInputRef   = useRef(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // ── Speech Recognition (Web Speech API — no key needed) ──
   useEffect(() => {
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -256,7 +238,41 @@ export default function Chat() {
     }
   };
 
-  // ── Submit question to RAG backend ────────────────────────
+  const handleFileChange = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    e.target.value = "";
+
+    setUploadMsg("Uploading...");
+    try {
+      const result = await uploadFiles(files);
+
+      const newUploads = files.map((f) => ({
+        id:   Math.random().toString(36).slice(2),
+        name: f.name,
+        size: f.size > 1024 * 1024
+          ? `${(f.size / (1024 * 1024)).toFixed(1)} MB`
+          : `${(f.size / 1024).toFixed(0)} KB`,
+        date: new Date().toLocaleDateString([], { month: "short", day: "numeric" }),
+      }));
+      setUploads((prev) => [...prev, ...newUploads]);
+
+      if (result?.session_id) {
+        setSessionId(result.session_id);
+      }
+
+      setUploadMsg(`${files.length} file${files.length > 1 ? "s" : ""} uploaded`);
+      setTimeout(() => setUploadMsg(null), 2500);
+    } catch (err) {
+      setError(`Upload failed: ${err.message}`);
+      setUploadMsg(null);
+    }
+  };
+
+  const handleAttachClick = () => {
+    fileInputRef.current?.click();
+  };
+
   const submit = useCallback(async (override) => {
     const question = (override ?? input).trim();
     if (!question || loading) return;
@@ -265,9 +281,7 @@ export default function Chat() {
     setError(null);
     if (taRef.current) taRef.current.style.height = "auto";
 
-    // Append user message
-    const userMsg = { role: "user", content: question, ts: new Date() };
-    // Append typing placeholder for assistant
+    const userMsg        = { role: "user", content: question, ts: new Date() };
     const asstPlaceholder = {
       role: "assistant", content: "", ts: new Date(),
       typing: true, sources: [],
@@ -276,8 +290,7 @@ export default function Chat() {
     setLoading(true);
 
     try {
-      // POST /query → { answer, sources }
-      const { answer, sources } = await queryRAG(question);
+      const { answer, sources } = await queryRAG(question, sessionId);
 
       setMessages((prev) => {
         const withoutPlaceholder = prev.slice(0, -1);
@@ -296,14 +309,12 @@ export default function Chat() {
       setError(
         `Backend unreachable: ${e.message} — make sure FastAPI is running at ${API_CONFIG.BASE_URL}`
       );
-      // Remove typing placeholder
       setMessages((prev) => prev.filter((m) => !m.typing));
     } finally {
       setLoading(false);
     }
-  }, [input, loading]);
+  }, [input, loading, sessionId]);
 
-  // ── Retry last question ───────────────────────────────────
   const retry = useCallback(() => {
     const lastUser = [...messages].reverse().find((m) => m.role === "user");
     if (!lastUser) return;
@@ -312,19 +323,28 @@ export default function Chat() {
     submit(lastUser.content);
   }, [messages, submit]);
 
-  const isEmpty      = messages.length === 0;
-  const sessionDate  = new Date()
+  const handleActionClick = (action) => {
+    if (action.navigate) {
+      navigate(action.navigate, { state: { session_id: sessionId } });
+      return;
+    }
+    if (action.query) {
+      submit(action.query);
+    }
+  };
+
+  const isEmpty     = messages.length === 0;
+  const sessionDate = new Date()
     .toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" })
     .toUpperCase();
 
-  // ── Action buttons (center-to-dock) ──────────────────────
   const ActionButtons = (
     <div className={`cs-action-row ${isEmpty ? "at-center" : "at-bottom"}`}>
       {RESEARCH_ACTIONS.map((action) => (
         <button
           key={action.label}
           className={`cs-chip${action.primary ? " primary" : ""}`}
-          onClick={() => submit(action.query)}
+          onClick={() => handleActionClick(action)}
         >
           {action.label}
         </button>
@@ -336,19 +356,16 @@ export default function Chat() {
     <div className="cs-chat-root">
       <div className="cs-body">
 
-        {/* Session label */}
         {!isEmpty && (
           <div className="cs-session-label">
             {sessionDate} • ANALYSIS SESSION
           </div>
         )}
 
-        {/* ── Messages / Empty state ── */}
         <div className={`cs-messages ${isEmpty ? "empty" : ""}`}>
           {isEmpty ? (
             <div className="cs-empty-state">
               <div className="cs-empty-icon">{Icons.Logo}</div>
-              {/* Action buttons render in CENTER position over the empty state */}
             </div>
           ) : (
             <>
@@ -363,20 +380,16 @@ export default function Chat() {
           <div ref={bottomRef} />
         </div>
 
-        {/* CENTER action buttons rendered as a body overlay when isEmpty */}
         {isEmpty && ActionButtons}
 
-        {/* Error when no messages yet */}
         {isEmpty && error && (
           <div style={{ padding: "0 36px 8px" }}>
             <ErrBanner msg={error} onClose={() => setError(null)} />
           </div>
         )}
 
-        {/* ── Input bar ── */}
         <div className="cs-input-wrap">
 
-          {/* Uploads toggle row — also hosts DOCKED action buttons */}
           <div className="cs-uploads-toggle-row">
             <button
               className="cs-uploads-toggle-btn"
@@ -388,11 +401,19 @@ export default function Chat() {
               <span className="cs-uploads-count">{uploads.length}</span>
             </button>
 
-            {/* Action buttons render in DOCKED position next to Uploads when not empty */}
+            {uploadMsg && (
+              <span className="cs-upload-status-msg">{uploadMsg}</span>
+            )}
+
+            {sessionId && (
+              <span className="cs-session-badge" title={`Session: ${sessionId}`}>
+                Session active
+              </span>
+            )}
+
             {!isEmpty && ActionButtons}
           </div>
 
-          {/* Uploads drawer */}
           {uploadsOpen && (
             <UploadsDrawer
               uploads={uploads}
@@ -400,9 +421,20 @@ export default function Chat() {
             />
           )}
 
-          {/* Input box */}
           <div className={`cs-input-box ${loading ? "loading" : ""}`}>
-            <button className="cs-input-icon-btn" title="Attach file">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf"
+              multiple
+              style={{ display: "none" }}
+              onChange={handleFileChange}
+            />
+            <button
+              className="cs-input-icon-btn"
+              title="Attach PDF"
+              onClick={handleAttachClick}
+            >
               {Icons.Attach}
             </button>
 
@@ -432,7 +464,6 @@ export default function Chat() {
             />
 
             <div className="cs-input-actions">
-              {/* Mic */}
               <button
                 className={`cs-input-icon-btn cs-mic-btn ${listening ? "active" : ""}`}
                 onClick={toggleMic}
@@ -442,7 +473,6 @@ export default function Chat() {
                 {listening && <span className="cs-mic-pulse" />}
               </button>
 
-              {/* Send */}
               <button
                 className={`cs-send-btn ${input.trim() && !loading ? "active" : ""}`}
                 onClick={() => submit()}
@@ -463,41 +493,3 @@ export default function Chat() {
     </div>
   );
 }
-
-
-/**
- * ══════════════════════════════════════════════════════════
- * BACKEND API ENDPOINTS SUMMARY (FastAPI / RAG Integration)
- * ══════════════════════════════════════════════════════════
- * * BASE URL: http://localhost:8000
- * * 1. QUERY ENDPOINT
- * - Route:  /query
- * - Method: POST
- * - Payload Type: application/json
- * - Request Body:
- * { "question": "string" }
- * - Expected Response:
- * { "answer": "string", "sources": ["string"] }
- * - Note: Sources should be an array of filenames/paths for UI pills.
- * * 2. UPLOAD ENDPOINT
- * - Route:  /upload
- * - Method: POST
- * - Payload Type: multipart/form-data
- * - Request Body:
- * Key: "files" (Multiple File Objects)
- * - Expected Response:
- * JSON object (Status/Success confirmation)
- * * ══════════════════════════════════════════════════════════
- * IMPLEMENTATION DETAILS FOR BACKEND TEAM
- * ══════════════════════════════════════════════════════════
- * * [RAG Logic]
- * The frontend expects a structured response from /query to
- * display the AI's answer and click-able source references.
- * * [File Handling]
- * The /upload route must be configured to handle multiple files
- * using the "files" key (e.g., List[UploadFile] in FastAPI).
- * * [CORS Configuration]
- * Please ensure CORS is enabled to allow requests from the
- * frontend origin (e.g., http://localhost:3000 or 5173).
- * * ══════════════════════════════════════════════════════════
- */

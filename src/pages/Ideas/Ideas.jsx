@@ -1,7 +1,38 @@
 import React, { useState } from "react";
 import "./Ideas.css";
 
-// ─── Icon Components ────────────────────────────────────────────────────────
+const API_BASE = "http://localhost:8000";
+
+// ─── Parser ─────────────────────────────────────────────────────────────────
+
+function parseIdeasText(text) {
+  const blocks = text.split(/\n{2,}/);
+  const ideas = [];
+
+  for (const block of blocks) {
+    if (!block.trim()) continue;
+
+    const get = (label) => {
+      const regex = new RegExp(`${label}:\\s*(.+)`, "i");
+      const match = block.match(regex);
+      return match ? match[1].trim() : "";
+    };
+
+    const title    = get("Title");
+    const problem  = get("Problem");
+    const solution = get("Solution");
+    const impact   = get("Impact");
+    const category = get("Category");
+
+    if (title || problem || solution) {
+      ideas.push({ title, problem, solution, impact, category });
+    }
+  }
+
+  return ideas;
+}
+
+// ─── Icon Components ─────────────────────────────────────────────────────────
 
 const IconFilter = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -9,18 +40,11 @@ const IconFilter = () => (
   </svg>
 );
 
-
-
 const IconChevronDown = ({ open }) => (
   <svg
-    width="13"
-    height="13"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
+    width="13" height="13" viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="2.5"
+    strokeLinecap="round" strokeLinejoin="round"
     style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.3s ease" }}
   >
     <polyline points="6 9 12 15 18 9"/>
@@ -33,12 +57,12 @@ const IconSparkle = () => (
   </svg>
 );
 
-// Generic category icon — swapped by category string if desired
 const CategoryIcon = ({ category }) => {
   const icons = {
     INFRASTRUCTURE: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+        <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
       </svg>
     ),
     HEALTHTECH: (
@@ -65,35 +89,18 @@ const CategoryIcon = ({ category }) => {
   };
   return icons[category] || (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="8" x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
     </svg>
   );
 };
 
-// ─── IdeaCard Component ──────────────────────────────────────────────────────
+// ─── IdeaCard ────────────────────────────────────────────────────────────────
 
-/**
- * IdeaCard
- *
- * Props (all optional — show placeholder state when absent):
- *   category      {string}  e.g. "INFRASTRUCTURE"
- *   title         {string}  Idea name
- *   problem       {string}  Problem statement
- *   solution      {string}  Proposed solution
- *   impact        {string}  Measurable / expected impact
- *   metadata      {object}  Optional key-value pairs e.g. { "Confidence": "94%", "Status": "Patent-Ready" }
- *   badge         {string}  Optional badge label e.g. "MOONSHOT PROJECT"
- *   onExpand      {func}    Callback when deep analysis is requested
- */
 const IdeaCard = ({
-  category = "",
-  title = "",
-  problem = "",
-  solution = "",
-  impact = "",
-  metadata = null,
-  badge = null,
-  onExpand,
+  category = "", title = "", problem = "", solution = "",
+  impact = "", metadata = null, badge = null, onExpand,
 }) => {
   const [expanded, setExpanded] = useState(false);
   const isEmpty = !title && !problem && !solution && !impact;
@@ -105,20 +112,16 @@ const IdeaCard = ({
 
   return (
     <article className={`idea-card ${isEmpty ? "idea-card--empty" : ""}`}>
-      {/* ── Card Header ── */}
       <div className="idea-card__header">
         <div className="idea-card__icon-wrap">
           <CategoryIcon category={category?.toUpperCase()} />
         </div>
         <div className="idea-card__header-right">
           {badge && <span className="idea-card__badge idea-card__badge--special">{badge}</span>}
-          {category && !badge && (
-            <span className="idea-card__badge">{category.toUpperCase()}</span>
-          )}
+          {category && !badge && <span className="idea-card__badge">{category.toUpperCase()}</span>}
         </div>
       </div>
 
-      {/* ── Card Body ── */}
       <div className="idea-card__body">
         {isEmpty ? (
           <div className="idea-card__skeleton">
@@ -131,18 +134,14 @@ const IdeaCard = ({
         ) : (
           <>
             <h2 className="idea-card__title">{title}</h2>
-
             <div className="idea-card__section">
               <span className="idea-card__label">PROBLEM</span>
               <p className="idea-card__text">{problem}</p>
             </div>
-
             <div className="idea-card__section">
               <span className="idea-card__label">SOLUTION</span>
               <p className="idea-card__text">{solution}</p>
             </div>
-
-            {/* ── Expandable Impact ── */}
             <div className={`idea-card__expand-wrap ${expanded ? "idea-card__expand-wrap--open" : ""}`}>
               <div className="idea-card__section idea-card__section--impact">
                 <span className="idea-card__label idea-card__label--impact">IMPACT</span>
@@ -153,24 +152,17 @@ const IdeaCard = ({
         )}
       </div>
 
-      {/* ── Card Footer ── */}
       {!isEmpty && (
         <div className="idea-card__footer">
           <div className="idea-card__meta">
-            {metadata &&
-              Object.entries(metadata).map(([key, val]) => (
-                <div key={key} className="idea-card__meta-item">
-                  <span className="idea-card__meta-key">{key}</span>
-                  <span className="idea-card__meta-val">{val}</span>
-                </div>
-              ))}
+            {metadata && Object.entries(metadata).map(([key, val]) => (
+              <div key={key} className="idea-card__meta-item">
+                <span className="idea-card__meta-key">{key}</span>
+                <span className="idea-card__meta-val">{val}</span>
+              </div>
+            ))}
           </div>
-
-          <button
-            className="idea-card__expand-btn"
-            onClick={handleExpand}
-            aria-expanded={expanded}
-          >
+          <button className="idea-card__expand-btn" onClick={handleExpand} aria-expanded={expanded}>
             <span>{expanded ? "Hide Details" : "View Deep Analysis"}</span>
             <IconChevronDown open={expanded} />
           </button>
@@ -180,13 +172,11 @@ const IdeaCard = ({
   );
 };
 
-// ─── Placeholder / Empty State ───────────────────────────────────────────────
+// ─── Empty State ─────────────────────────────────────────────────────────────
 
 const EmptyState = () => (
   <div className="idea-empty-state">
-    <div className="idea-empty-state__icon">
-      <IconSparkle />
-    </div>
+    <div className="idea-empty-state__icon"><IconSparkle /></div>
     <h3 className="idea-empty-state__title">No ideas synthesized yet</h3>
     <p className="idea-empty-state__desc">
       Upload a dataset or start a chat to generate AI-synthesized startup ideas and research pathways.
@@ -194,27 +184,64 @@ const EmptyState = () => (
   </div>
 );
 
-// ─── IdeaGeneratorPage ───────────────────────────────────────────────────────
+// ─── Main Page ───────────────────────────────────────────────────────────────
 
-/**
- * IdeaGeneratorPage
- *
- * Props:
- *   ideas   {Array}   Array of idea objects (see IdeaCard props above)
- *   loading {boolean} Show loading skeleton cards
- *   onFilter     {func} Called when user clicks Filter
- */
-const IdeaGeneratorPage = ({
-  ideas = [],
-  loading = false,
-  onFilter,
-}) => {
-  // Show 6 skeleton cards while loading
+const IdeaGeneratorPage = () => {
+  const [ideas,    setIdeas]    = useState([]);
+  const [loading,  setLoading]  = useState(false);
+  const [error,    setError]    = useState(null);
+  const [topic,    setTopic]    = useState("");
+  const [pdfFiles, setPdfFiles] = useState([]);
+
+  // ── Generate Handler (calls POST /ideas) ──────────────────────────────────
+  const handleGenerate = async () => {
+    setLoading(true);
+    setError(null);
+    setIdeas([]);
+
+    try {
+      const body = {};
+      if (topic.trim()) body.topic = topic.trim();
+
+      const res = await fetch(`${API_BASE}/ideas`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        // Backend error: expects { "message": "..." }
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.message || `HTTP ${res.status}`);
+      }
+
+      const json = await res.json();
+
+      // Backend returns { "ideas": "raw text block" }
+      const raw = json.ideas ?? json.answer ?? json.text ?? "";
+      const parsed = parseIdeasText(raw);
+      setIdeas(parsed);
+
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ── PDF file picker (UI only — files already in session on backend) ────────
+  const handlePdfChange = (e) => {
+    const files = Array.from(e.target.files || []);
+    setPdfFiles((prev) => [...prev, ...files]);
+    e.target.value = "";
+  };
+
   const skeletonCards = Array.from({ length: 6 });
 
   return (
     <div className="ig-page">
-      {/* ── Page Header ── */}
+
+      {/* ── Header ── */}
       <header className="ig-header">
         <div className="ig-header__left">
           <div className="ig-tag">
@@ -230,24 +257,72 @@ const IdeaGeneratorPage = ({
         </div>
 
         <div className="ig-header__actions">
-          <button className="ig-btn ig-btn--filter" onClick={onFilter}>
+          {/* Topic input */}
+          <input
+            type="text"
+            value={topic}
+            onChange={(e) => setTopic(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
+            placeholder="Optional topic…"
+            style={{
+              background: "#16162a",
+              border: "1px solid #20203a",
+              borderRadius: "9px",
+              padding: "8px 14px",
+              color: "#c4c4de",
+              fontSize: "12.5px",
+              fontFamily: "'DM Sans', sans-serif",
+              outline: "none",
+              width: "180px",
+            }}
+          />
+
+          {/* Generate button */}
+          <button
+            className="ig-btn ig-btn--filter"
+            onClick={handleGenerate}
+            disabled={loading}
+          >
+            <IconSparkle />
+            <span>{loading ? "Generating…" : "Generate"}</span>
+          </button>
+
+          {/* Filter button (existing) */}
+          <button className="ig-btn ig-btn--filter">
             <IconFilter />
             <span>Filter</span>
           </button>
-          
         </div>
       </header>
+
+      {/* ── Error Banner ── */}
+      {error && (
+        <div style={{
+          margin: "0 0 16px",
+          padding: "10px 16px",
+          background: "#1e0e0e",
+          border: "1px solid #4a1a1a",
+          borderRadius: "10px",
+          color: "#d06060",
+          fontSize: "12.5px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}>
+          <span>⚠ {error}</span>
+          <button
+            onClick={() => setError(null)}
+            style={{ background: "none", border: "none", color: "#d06060", cursor: "pointer", fontSize: "15px" }}
+          >✕</button>
+        </div>
+      )}
 
       {/* ── Grid ── */}
       <main className="ig-grid">
         {loading ? (
-          skeletonCards.map((_, i) => (
-            <IdeaCard key={`skeleton-${i}`} />
-          ))
+          skeletonCards.map((_, i) => <IdeaCard key={`skeleton-${i}`} />)
         ) : ideas.length === 0 ? (
-          <div className="ig-grid__empty">
-            <EmptyState />
-          </div>
+          <div className="ig-grid__empty"><EmptyState /></div>
         ) : (
           ideas.map((idea, i) => (
             <IdeaCard
