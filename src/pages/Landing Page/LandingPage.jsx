@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect, useRef } from "react";
-import { motion } from "framer-motion";
-import { Upload, Brain, LayoutDashboard, Network, ChevronRight } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Upload, Brain, LayoutDashboard, Network, ChevronRight, X } from "lucide-react";
 import "./LandingPage.css";
 
 /* ── Framer Motion variants ──────────────────────────────── */
@@ -36,6 +36,106 @@ const cardVariants = {
     transition: { duration: 0.6, ease: "easeOut" },
   },
 };
+
+const modalOverlayVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.3 } },
+  exit: { opacity: 0, transition: { duration: 0.3 } },
+};
+
+const modalVariants = {
+  hidden: { opacity: 0, scale: 0.95, y: 20 },
+  visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+  exit: { opacity: 0, scale: 0.95, y: 20, transition: { duration: 0.3, ease: "easeIn" } },
+};
+
+/* ── Modal Mock Data ─────────────────────────────────────── */
+const stageData = [
+  {
+    title: "Stage 1: Ingest",
+    description: "Seamlessly drop your research papers into the Gravity Well. Our system instantly parses PDFs, DOCXs, and TXTs.",
+    image: "/upload-ui.jpg",
+    mockUI: (
+      <div className="lp-mock-box">
+        <div className="lp-mock-upload-area">
+          <Upload className="lp-mock-icon" />
+          <p>Drop research papers here</p>
+        </div>
+        <div className="lp-mock-file-list">
+          <div className="lp-mock-file"><span>📄 Impulse-Momentum Principle.pdf</span> <span className="lp-mock-size">1525 KB</span></div>
+          <div className="lp-mock-file"><span>📄 FY Pending Exam Form.pdf</span> <span className="lp-mock-size">1025 KB</span></div>
+          <div className="lp-mock-file"><span>📄 PPT topics AU EM.pdf</span> <span className="lp-mock-size">63 KB</span></div>
+          <div className="lp-mock-file"><span>📄 Final Pharmacy Brochure.pdf</span> <span className="lp-mock-size">15847 KB</span></div>
+        </div>
+        <button className="lp-mock-btn-success">• Analyzed 4 papers</button>
+      </div>
+    )
+  },
+  {
+    title: "Stage 2: Analyze & Synthesize",
+    description: "Navigate your uploaded knowledge through a dynamic node graph. Identify gaps and generate summaries effortlessly.",
+    image: "/node-ui.jpg",
+    mockUI: (
+      <div className="lp-mock-box lp-mock-node-container">
+        <div className="lp-node-center">
+          <Brain className="w-6 h-6 text-white mb-1" />
+        </div>
+        <div className="lp-node-pill lp-pill-top">Generate Summary</div>
+        <div className="lp-node-pill lp-pill-left">Synthesize Papers</div>
+        <div className="lp-node-pill lp-pill-right">Identify Gaps</div>
+        <div className="lp-node-pill lp-pill-bottom">Find Contradictions</div>
+      </div>
+    )
+  },
+  {
+    title: "Stage 3: The Unified Interface",
+    description: "Detect critical variances in methodology or conflicting results between peer-reviewed sources.",
+    image: "/contradictions-ui.jpg",
+    mockUI: (
+      <div className="lp-mock-box">
+        <h4 className="lp-mock-header">Contradictions</h4>
+        <p className="lp-mock-subtext">Critical variances and conflicting findings across sources</p>
+        <div className="lp-mock-grid">
+          <div className="lp-mock-grid-card">
+            <h5>Methodological Variance</h5>
+            <p>Detects differences in research design...</p>
+          </div>
+          <div className="lp-mock-grid-card">
+            <h5>Conflicting Results</h5>
+            <p>Surfaces statistically opposed findings...</p>
+          </div>
+          <div className="lp-mock-grid-card">
+            <h5>Claim Inconsistencies</h5>
+            <p>Identifies incompatible assertions...</p>
+          </div>
+        </div>
+      </div>
+    )
+  },
+  {
+    title: "Stage 4: Discover Insights",
+    description: "Transform raw research data into actionable innovation clusters and AI-synthesized startup concepts.",
+    image: "/ideas-ui.jpg",
+    mockUI: (
+      <div className="lp-mock-box">
+        <div className="lp-mock-flex-header">
+          <h4 className="lp-mock-header">Idea Generator</h4>
+          <button className="lp-mock-btn-outline">☆ Generate</button>
+        </div>
+        <div className="lp-mock-idea-list">
+          <div className="lp-mock-idea">
+            <h5>💡 AI-Driven Materials Discovery</h5>
+            <p>Synthesized from 12 related papers analyzing thermal properties.</p>
+          </div>
+          <div className="lp-mock-idea">
+            <h5>💡 Automated Fact-Checking API</h5>
+            <p>Derived from contradictions found in methodology datasets.</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+];
 
 /* ── Animated particle / starfield canvas ────────────────── */
 function ParticleBackground() {
@@ -145,7 +245,7 @@ function ParticleBackground() {
 }
 
 /* ── Journey card ────────────────────────────────────────── */
-function JourneyCard({ icon: Icon, title, description, index }) {
+function JourneyCard({ icon: Icon, title, description, index, onClick }) {
   return (
     <motion.div
       variants={cardVariants}
@@ -154,8 +254,8 @@ function JourneyCard({ icon: Icon, title, description, index }) {
       viewport={{ once: true, amount: 0.2 }}
       transition={{ delay: index * 0.12 }}
       whileHover={{ scale: 1.02 }}
-      className="lp-card"
-      data-testid={`journey-card-${index}`}
+      className="lp-card lp-interactive-card"
+      onClick={onClick}
     >
       <div className="lp-card-hover-bg" />
       <div className="lp-card-body">
@@ -164,6 +264,7 @@ function JourneyCard({ icon: Icon, title, description, index }) {
         </div>
         <h3 className="lp-card-title">{title}</h3>
         <p className="lp-card-desc">{description}</p>
+        <div className="lp-card-click-hint">Click to explore phase →</div>
       </div>
     </motion.div>
   );
@@ -171,60 +272,39 @@ function JourneyCard({ icon: Icon, title, description, index }) {
 
 /* ── Landing page ────────────────────────────────────────── */
 export default function LandingPage() {
-  // Swapped wouter useLocation for react-router-dom useNavigate
   const navigate = useNavigate();
+  const [activeModal, setActiveModal] = useState(null);
 
   return (
     <div className="lp-root">
-
-      {/* Animated particle / starfield background */}
       <ParticleBackground />
 
-      {/* Dark blue radial corner gradients */}
       <div className="lp-grad-top-left" />
       <div className="lp-grad-bottom-right" />
       <div className="lp-grad-center" />
 
       {/* ── Hero ── */}
       <section className="lp-hero">
-        <motion.div
-          className="lp-hero-inner"
-          variants={heroVariants}
-          initial="hidden"
-          animate="visible"
-        >
+        <motion.div className="lp-hero-inner" variants={heroVariants} initial="hidden" animate="visible">
           <motion.div variants={childVariants} className="lp-hero-label-wrap">
-            <span className="lp-hero-label">
-              Unifying Fragmented Knowledge
-            </span>
+            <span className="lp-hero-label">Unifying Fragmented Knowledge</span>
           </motion.div>
-
           <motion.h1 variants={childVariants} className="lp-hero-title">
             COGNITIVE SANCTUARY
           </motion.h1>
-
           <div className="lp-hero-bullets">
             <motion.div variants={childVariants} className="lp-bullet-row">
               <div className="lp-bullet-dot" />
-              <p className="lp-bullet-text">
-                Aetheron instantly synthesizes complex PDFs into clear, actionable knowledge.
-              </p>
+              <p className="lp-bullet-text">Aetheron instantly synthesizes complex PDFs into clear, actionable knowledge.</p>
             </motion.div>
             <motion.div variants={childVariants} className="lp-bullet-row">
               <div className="lp-bullet-dot" />
-              <p className="lp-bullet-text">
-                Your data becomes a secure, private harbor for effortless deep understanding and innovation.
-              </p>
+              <p className="lp-bullet-text">Your data becomes a secure, private harbor for effortless deep understanding and innovation.</p>
             </motion.div>
           </div>
-
           <motion.div variants={childVariants}>
-            <button
-              className="lp-start-btn"
-              onClick={() => navigate("/upload")}
-              data-testid="button-start-now"
-            >
-              START NOW <ChevronRight className="ml-2 w-5 h-5" />
+            <button className="lp-start-btn" onClick={() => navigate("/upload")}>
+              START NOW <ChevronRight className="ml-2 w-5 h-5 inline" />
             </button>
           </motion.div>
         </motion.div>
@@ -242,24 +322,28 @@ export default function LandingPage() {
             icon={Upload}
             title="USER JOURNEY 1: INGEST"
             description="Upload PDFs once. Aetheron's Gravity Well pulls fragments into a cohesive whole."
+            onClick={() => setActiveModal(0)}
           />
           <JourneyCard
             index={1}
             icon={Brain}
             title="USER JOURNEY 2: ANALYZE & SYNTHESIZE"
             description="Our AI analyzes and synthesizes. The chaotic is structured."
+            onClick={() => setActiveModal(1)}
           />
           <JourneyCard
             index={2}
             icon={LayoutDashboard}
             title="USER JOURNEY 3: THE UNIFIED INTERFACE"
             description="Exploration is central. Navigate four critical dimensions in one screen."
+            onClick={() => setActiveModal(2)}
           />
           <JourneyCard
             index={3}
             icon={Network}
             title="USER JOURNEY 4: DISCOVER INSIGHTS"
             description="Chat, find Gaps, Generate Ideas, and summarize. Everything connected."
+            onClick={() => setActiveModal(3)}
           />
         </div>
       </section>
@@ -270,6 +354,47 @@ export default function LandingPage() {
           © Aetheron Inc. 2024. All rights reserved. | Private Harbor for Your Intellectual Capital.
         </p>
       </footer>
+
+      {/* ── Interactive Modal ── */}
+      <AnimatePresence>
+        {activeModal !== null && (
+          <motion.div 
+            className="lp-modal-overlay"
+            variants={modalOverlayVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            onClick={() => setActiveModal(null)}
+          >
+            <motion.div 
+              className="lp-modal"
+              variants={modalVariants}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button className="lp-modal-close" onClick={() => setActiveModal(null)}>
+                <X size={24} />
+              </button>
+              
+              <div className="lp-modal-content">
+                <h3 className="lp-modal-title">{stageData[activeModal].title}</h3>
+                <p className="lp-modal-desc">{stageData[activeModal].description}</p>
+                
+                <div className="lp-modal-mock-container">
+                  {stageData[activeModal].mockUI}
+                  
+                  {/* Optional placeholder image reference as requested */}
+                  <img 
+                    src={stageData[activeModal].image} 
+                    alt={stageData[activeModal].title} 
+                    className="lp-modal-hidden-img" 
+                  />
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }
