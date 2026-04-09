@@ -2,52 +2,35 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import "./Chat.css";
 
 // ══════════════════════════════════════════════════════════
-// API CONFIG  — edit to match your FastAPI backend
+// API CONFIG — RAG backend (FastAPI)
 // ══════════════════════════════════════════════════════════
 const API_CONFIG = {
   BASE_URL:        "http://localhost:8000",
-  CHAT_ENDPOINT:   "/chat",
-  STREAM_ENDPOINT: "/chat/stream",
-  headers: { "Content-Type": "application/json" },
+  UPLOAD_ENDPOINT: "/upload",
+  QUERY_ENDPOINT:  "/query",
 };
 
-async function callAPI({ messages, onChunk, onDone, onError, stream }) {
-  const body = JSON.stringify({ messages });
-  if (stream) {
-    try {
-      const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.STREAM_ENDPOINT}`, {
-        method: "POST", headers: API_CONFIG.headers, body,
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const reader = res.body.getReader();
-      const dec    = new TextDecoder();
-      let buf = "";
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        buf += dec.decode(value, { stream: true });
-        const lines = buf.split("\n");
-        buf = lines.pop();
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
-          const raw = line.slice(6).trim();
-          if (raw === "[DONE]") { onDone(); return; }
-          try { onChunk(JSON.parse(raw)); } catch { onChunk(raw); }
-        }
-      }
-      onDone();
-    } catch (e) { onError(e.message); }
-  } else {
-    try {
-      const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.CHAT_ENDPOINT}`, {
-        method: "POST", headers: API_CONFIG.headers, body,
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      onChunk(data.reply);
-      onDone();
-    } catch (e) { onError(e.message); }
-  }
+// POST /query  →  { answer: string, sources: string[] }
+async function queryRAG(question) {
+  const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.QUERY_ENDPOINT}`, {
+    method:  "POST",
+    headers: { "Content-Type": "application/json" },
+    body:    JSON.stringify({ question }),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+// POST /upload  →  multipart form-data
+async function uploadFiles(files) {
+  const form = new FormData();
+  for (const f of files) form.append("files", f);
+  const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.UPLOAD_ENDPOINT}`, {
+    method: "POST",
+    body:   form,
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
 }
 
 // ── SVG Icons ──────────────────────────────────────────────
@@ -64,24 +47,23 @@ const Icons = {
   File:     <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" strokeWidth="2"/><polyline points="14 2 14 8 20 8" stroke="currentColor" strokeWidth="2"/></svg>,
   Close:    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>,
   Logo:     <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  Source:   <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
 };
 
-const SUGGESTIONS = [
-  "Synthesize two papers",
-  "Find contradictions",
-  "Identify research gaps",
-  "Generate a summary report",
+// Research tool actions (replaces generic SUGGESTIONS)
+const RESEARCH_ACTIONS = [
+  { label: "Synthesize Papers",   query: "Synthesize the key themes and findings across all uploaded papers.", primary: true  },
+  { label: "Identify Gaps",       query: "Identify the research gaps and open questions in the uploaded documents.", primary: false },
+  { label: "Find Contradictions", query: "Find key contradictions or conflicting claims across the uploaded documents.", primary: false },
+  { label: "Generate Summary",    query: "Generate a comprehensive summary of all uploaded documents.", primary: false },
 ];
 
-
-
-// ── Mock uploads (replace with real import from Upload page) ─
-// In your project, import this from src/pages/Upload or fetch via API.
+// TODO: Replace MOCK_UPLOADS with real data imported/fetched from Upload page
 const MOCK_UPLOADS = [
-  { id: 1, name: "Paper_2024_v2.pdf",           size: "1.2 MB", date: "Apr 6" },
-  { id: 2, name: "LiteratureReview_final.pdf",  size: "3.4 MB", date: "Apr 5" },
-  { id: 3, name: "Dataset_annotations.csv",     size: "780 KB", date: "Apr 4" },
-  { id: 4, name: "Methodology_notes.docx",      size: "210 KB", date: "Apr 3" },
+  { id: 1, name: "Paper_2024_v2.pdf",          size: "1.2 MB", date: "Apr 6" },
+  { id: 2, name: "LiteratureReview_final.pdf", size: "3.4 MB", date: "Apr 5" },
+  { id: 3, name: "Dataset_annotations.csv",    size: "780 KB", date: "Apr 4" },
+  { id: 4, name: "Methodology_notes.docx",     size: "210 KB", date: "Apr 3" },
 ];
 
 function fmtTime(d) {
@@ -96,6 +78,28 @@ function Dots() {
       <span className="cs-dot" />
       <span className="cs-dot" />
     </span>
+  );
+}
+
+// ── Source Pills (shown under assistant answer) ────────────
+function SourcePills({ sources }) {
+  if (!sources || sources.length === 0) return null;
+  return (
+    <div className="cs-sources">
+      <span className="cs-sources-label">
+        {Icons.Source} Sources
+      </span>
+      <div className="cs-sources-list">
+        {sources.map((src, i) => (
+          <span key={i} className="cs-source-pill" title={src}>
+            {Icons.File}
+            {typeof src === "string"
+              ? src.split("/").pop().split("\\").pop()
+              : `Source ${i + 1}`}
+          </span>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -118,10 +122,17 @@ function Msg({ msg, onRetry }) {
           <span className="cs-msg-role-label">Research Assistant</span>
         </div>
       )}
+
       <div className={`cs-bubble ${isUser ? "user" : "assistant"}`}>
         {msg.typing ? <Dots /> : msg.content}
         <div className="cs-bubble-time">{fmtTime(msg.ts)}</div>
       </div>
+
+      {/* Sources from RAG */}
+      {!isUser && !msg.typing && msg.sources?.length > 0 && (
+        <SourcePills sources={msg.sources} />
+      )}
+
       {!isUser && !msg.typing && (
         <div className="cs-msg-actions">
           <button className="cs-action-btn" onClick={copy}>
@@ -147,7 +158,6 @@ function ErrBanner({ msg, onClose }) {
   );
 }
 
-
 // ── Uploads Drawer ─────────────────────────────────────────
 function UploadsDrawer({ uploads, onClose }) {
   return (
@@ -160,15 +170,19 @@ function UploadsDrawer({ uploads, onClose }) {
         Manage all files in <span className="cs-uploads-link">Uploads</span> page
       </div>
       <div className="cs-uploads-list">
-        {uploads.map((f) => (
-          <div key={f.id} className="cs-upload-item">
-            <div className="cs-upload-icon">{Icons.File}</div>
-            <div className="cs-upload-info">
-              <div className="cs-upload-name" title={f.name}>{f.name}</div>
-              <div className="cs-upload-meta">{f.size} · {f.date}</div>
+        {uploads.length === 0 ? (
+          <div className="cs-uploads-empty">No files uploaded yet.</div>
+        ) : (
+          uploads.map((f) => (
+            <div key={f.id} className="cs-upload-item">
+              <div className="cs-upload-icon">{Icons.File}</div>
+              <div className="cs-upload-info">
+                <div className="cs-upload-name" title={f.name}>{f.name}</div>
+                <div className="cs-upload-meta">{f.size} · {f.date}</div>
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );
@@ -178,40 +192,34 @@ function UploadsDrawer({ uploads, onClose }) {
 // MAIN CHAT COMPONENT
 // ══════════════════════════════════════════════════════════
 export default function Chat() {
-  const [messages,      setMessages]      = useState([]);
-  const [input,         setInput]         = useState("");
-  const [loading,       setLoading]       = useState(false);
-  const [error,         setError]         = useState(null);
+  const [messages,    setMessages]    = useState([]);
+  const [input,       setInput]       = useState("");
+  const [loading,     setLoading]     = useState(false);
+  const [error,       setError]       = useState(null);
+  const [listening,   setListening]   = useState(false);
+  const [uploadsOpen, setUploadsOpen] = useState(false);
 
-  const stream = true;
-
-  // Speech-to-text
-  const [listening,     setListening]     = useState(false);
-  const recognitionRef                    = useRef(null);
-
-  
-  // Uploads drawer
-  const [uploadsOpen,   setUploadsOpen]   = useState(false);
-  // Replace MOCK_UPLOADS with your real data: import from Upload page or fetch
+  // TODO: Replace MOCK_UPLOADS with real data imported/fetched from Upload page
   const uploads = MOCK_UPLOADS;
 
-  const bottomRef = useRef(null);
-  const taRef     = useRef(null);
+  const bottomRef      = useRef(null);
+  const taRef          = useRef(null);
+  const recognitionRef = useRef(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // ── Speech Recognition setup ───────────────────────────
+  // ── Speech Recognition (Web Speech API — no key needed) ──
   useEffect(() => {
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return;
 
-    const rec = new SpeechRecognition();
-    rec.continuous      = false;
-    rec.interimResults  = true;
-    rec.lang            = "en-US";
+    const rec          = new SpeechRecognition();
+    rec.continuous     = false;
+    rec.interimResults = true;
+    rec.lang           = "en-US";
 
     rec.onresult = (e) => {
       let transcript = "";
@@ -219,9 +227,14 @@ export default function Chat() {
         transcript += e.results[i][0].transcript;
       }
       setInput(transcript);
+      if (taRef.current) {
+        taRef.current.style.height = "auto";
+        taRef.current.style.height =
+          Math.min(taRef.current.scrollHeight, 200) + "px";
+      }
     };
 
-    rec.onend = () => setListening(false);
+    rec.onend   = () => setListening(false);
     rec.onerror = () => setListening(false);
 
     recognitionRef.current = rec;
@@ -230,7 +243,7 @@ export default function Chat() {
   const toggleMic = () => {
     const rec = recognitionRef.current;
     if (!rec) {
-      setError("Speech recognition is not supported in this browser.");
+      setError("Speech recognition is not supported in this browser. Try Chrome or Edge.");
       return;
     }
     if (listening) {
@@ -243,53 +256,54 @@ export default function Chat() {
     }
   };
 
-  // ── Chat logic ─────────────────────────────────────────
-  const addChunk = useCallback((chunk) => {
-    setMessages((prev) => {
-      const last = prev[prev.length - 1];
-      if (last?.role === "assistant" && last?.typing === false && last?.streaming) {
-        return [...prev.slice(0, -1), { ...last, content: last.content + chunk }];
-      }
-      if (last?.role === "assistant" && last?.typing) {
-        return [...prev.slice(0, -1), { ...last, typing: false, streaming: true, content: chunk }];
-      }
-      return prev;
-    });
-  }, []);
-
-  const finalize = useCallback(() => {
-    setMessages((prev) => {
-      const last = prev[prev.length - 1];
-      if (last?.role === "assistant") {
-        return [...prev.slice(0, -1), { ...last, streaming: false, typing: false }];
-      }
-      return prev;
-    });
-    setLoading(false);
-  }, []);
-
-  const onError = useCallback((msg) => {
-    setError(`Backend unreachable: ${msg} — make sure FastAPI is running at ${API_CONFIG.BASE_URL}`);
-    setMessages((prev) => prev.filter((m) => !m.typing));
-    setLoading(false);
-  }, []);
-
+  // ── Submit question to RAG backend ────────────────────────
   const submit = useCallback(async (override) => {
-    const text = (override ?? input).trim();
-    if (!text || loading) return;
+    const question = (override ?? input).trim();
+    if (!question || loading) return;
+
     setInput("");
     setError(null);
     if (taRef.current) taRef.current.style.height = "auto";
 
-    const userMsg = { role: "user",      content: text, ts: new Date() };
-    const asstMsg = { role: "assistant", content: "",   ts: new Date(), typing: true, streaming: false };
-    setMessages((prev) => [...prev, userMsg, asstMsg]);
+    // Append user message
+    const userMsg = { role: "user", content: question, ts: new Date() };
+    // Append typing placeholder for assistant
+    const asstPlaceholder = {
+      role: "assistant", content: "", ts: new Date(),
+      typing: true, sources: [],
+    };
+    setMessages((prev) => [...prev, userMsg, asstPlaceholder]);
     setLoading(true);
 
-    const history = [...messages, userMsg].map((m) => ({ role: m.role, content: m.content }));
-    await callAPI({ messages: history, onChunk: addChunk, onDone: finalize, onError, stream });
-  }, [input, loading, messages, stream, addChunk, finalize, onError]);
+    try {
+      // POST /query → { answer, sources }
+      const { answer, sources } = await queryRAG(question);
 
+      setMessages((prev) => {
+        const withoutPlaceholder = prev.slice(0, -1);
+        return [
+          ...withoutPlaceholder,
+          {
+            role:    "assistant",
+            content: answer,
+            ts:      new Date(),
+            typing:  false,
+            sources: sources || [],
+          },
+        ];
+      });
+    } catch (e) {
+      setError(
+        `Backend unreachable: ${e.message} — make sure FastAPI is running at ${API_CONFIG.BASE_URL}`
+      );
+      // Remove typing placeholder
+      setMessages((prev) => prev.filter((m) => !m.typing));
+    } finally {
+      setLoading(false);
+    }
+  }, [input, loading]);
+
+  // ── Retry last question ───────────────────────────────────
   const retry = useCallback(() => {
     const lastUser = [...messages].reverse().find((m) => m.role === "user");
     if (!lastUser) return;
@@ -298,17 +312,28 @@ export default function Chat() {
     submit(lastUser.content);
   }, [messages, submit]);
 
-  const isEmpty = messages.length === 0;
-
-  const sessionDate = new Date()
+  const isEmpty      = messages.length === 0;
+  const sessionDate  = new Date()
     .toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" })
     .toUpperCase();
 
+  // ── Action buttons (center-to-dock) ──────────────────────
+  const ActionButtons = (
+    <div className={`cs-action-row ${isEmpty ? "at-center" : "at-bottom"}`}>
+      {RESEARCH_ACTIONS.map((action) => (
+        <button
+          key={action.label}
+          className={`cs-chip${action.primary ? " primary" : ""}`}
+          onClick={() => submit(action.query)}
+        >
+          {action.label}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
     <div className="cs-chat-root">
-
-
-      {/* ══ BODY ══ */}
       <div className="cs-body">
 
         {/* Session label */}
@@ -318,33 +343,30 @@ export default function Chat() {
           </div>
         )}
 
-        {/* Messages / Empty state */}
+        {/* ── Messages / Empty state ── */}
         <div className={`cs-messages ${isEmpty ? "empty" : ""}`}>
           {isEmpty ? (
             <div className="cs-empty-state">
               <div className="cs-empty-icon">{Icons.Logo}</div>
-              <div>
-                <h2 className="cs-empty-title">Start a New Analysis</h2>
-                <p className="cs-empty-subtitle">
-                  Ask a research question or upload documents to begin cross‑referencing and synthesis.
-                </p>
-              </div>
-              <div className="cs-chips">
-                {SUGGESTIONS.map((s) => (
-                  <button key={s} className="cs-chip" onClick={() => submit(s)}>{s}</button>
-                ))}
-              </div>
+              {/* Action buttons render in CENTER position over the empty state */}
             </div>
           ) : (
             <>
-              {messages.map((m, i) => <Msg key={i} msg={m} onRetry={retry} />)}
-              {error && <ErrBanner msg={error} onClose={() => setError(null)} />}
+              {messages.map((m, i) => (
+                <Msg key={i} msg={m} onRetry={retry} />
+              ))}
+              {error && (
+                <ErrBanner msg={error} onClose={() => setError(null)} />
+              )}
             </>
           )}
           <div ref={bottomRef} />
         </div>
 
-        {/* Error in empty state */}
+        {/* CENTER action buttons rendered as a body overlay when isEmpty */}
+        {isEmpty && ActionButtons}
+
+        {/* Error when no messages yet */}
         {isEmpty && error && (
           <div style={{ padding: "0 36px 8px" }}>
             <ErrBanner msg={error} onClose={() => setError(null)} />
@@ -354,7 +376,7 @@ export default function Chat() {
         {/* ── Input bar ── */}
         <div className="cs-input-wrap">
 
-          {/* Uploads drawer toggle arrow */}
+          {/* Uploads toggle row — also hosts DOCKED action buttons */}
           <div className="cs-uploads-toggle-row">
             <button
               className="cs-uploads-toggle-btn"
@@ -365,16 +387,24 @@ export default function Chat() {
               <span>Uploads</span>
               <span className="cs-uploads-count">{uploads.length}</span>
             </button>
+
+            {/* Action buttons render in DOCKED position next to Uploads when not empty */}
+            {!isEmpty && ActionButtons}
           </div>
 
-          {/* Uploads drawer (slides up above input) */}
+          {/* Uploads drawer */}
           {uploadsOpen && (
-            <UploadsDrawer uploads={uploads} onClose={() => setUploadsOpen(false)} />
+            <UploadsDrawer
+              uploads={uploads}
+              onClose={() => setUploadsOpen(false)}
+            />
           )}
 
           {/* Input box */}
           <div className={`cs-input-box ${loading ? "loading" : ""}`}>
-            <button className="cs-input-icon-btn" title="Attach file">{Icons.Attach}</button>
+            <button className="cs-input-icon-btn" title="Attach file">
+              {Icons.Attach}
+            </button>
 
             <textarea
               ref={taRef}
@@ -382,19 +412,27 @@ export default function Chat() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); }
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  submit();
+                }
               }}
               onInput={(e) => {
                 e.target.style.height = "auto";
-                e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
+                e.target.style.height =
+                  Math.min(e.target.scrollHeight, 200) + "px";
               }}
-              placeholder={listening ? "Listening… speak now" : "Ask a deep research question…"}
+              placeholder={
+                listening
+                  ? "Listening… speak now"
+                  : "Ask a question about your documents…"
+              }
               disabled={loading}
               rows={1}
             />
 
             <div className="cs-input-actions">
-              {/* Mic button */}
+              {/* Mic */}
               <button
                 className={`cs-input-icon-btn cs-mic-btn ${listening ? "active" : ""}`}
                 onClick={toggleMic}
@@ -418,10 +456,48 @@ export default function Chat() {
           <div className="cs-input-hint">
             <kbd className="cs-kbd">Enter</kbd> send &nbsp;·&nbsp;
             <kbd className="cs-kbd">Shift+Enter</kbd> new line &nbsp;·&nbsp;
-            Mode: <span className="cs-mode-label">{stream ? "Streaming (SSE)" : "Full Response"}</span>
+            <span className="cs-mode-label">RAG · PDF Query</span>
           </div>
         </div>
       </div>
     </div>
   );
 }
+
+
+/**
+ * ══════════════════════════════════════════════════════════
+ * BACKEND API ENDPOINTS SUMMARY (FastAPI / RAG Integration)
+ * ══════════════════════════════════════════════════════════
+ * * BASE URL: http://localhost:8000
+ * * 1. QUERY ENDPOINT
+ * - Route:  /query
+ * - Method: POST
+ * - Payload Type: application/json
+ * - Request Body:
+ * { "question": "string" }
+ * - Expected Response:
+ * { "answer": "string", "sources": ["string"] }
+ * - Note: Sources should be an array of filenames/paths for UI pills.
+ * * 2. UPLOAD ENDPOINT
+ * - Route:  /upload
+ * - Method: POST
+ * - Payload Type: multipart/form-data
+ * - Request Body:
+ * Key: "files" (Multiple File Objects)
+ * - Expected Response:
+ * JSON object (Status/Success confirmation)
+ * * ══════════════════════════════════════════════════════════
+ * IMPLEMENTATION DETAILS FOR BACKEND TEAM
+ * ══════════════════════════════════════════════════════════
+ * * [RAG Logic]
+ * The frontend expects a structured response from /query to
+ * display the AI's answer and click-able source references.
+ * * [File Handling]
+ * The /upload route must be configured to handle multiple files
+ * using the "files" key (e.g., List[UploadFile] in FastAPI).
+ * * [CORS Configuration]
+ * Please ensure CORS is enabled to allow requests from the
+ * frontend origin (e.g., http://localhost:3000 or 5173).
+ * * ══════════════════════════════════════════════════════════
+ */

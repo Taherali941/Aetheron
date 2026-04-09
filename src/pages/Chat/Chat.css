@@ -57,7 +57,6 @@ body {
   overflow: hidden;
 }
 
-
 /* ══════════════════════════════════════════════════════════
    BODY (messages + input)
    ══════════════════════════════════════════════════════════ */
@@ -67,6 +66,7 @@ body {
   flex-direction: column;
   overflow: hidden;
   min-width: 0;
+  position: relative;
 }
 
 /* Session label */
@@ -79,7 +79,7 @@ body {
   text-transform: uppercase;
 }
 
-/* Small icon button (used in modals/drawers) */
+/* Small icon button (used in drawers) */
 .cs-icon-btn-sm {
   width: 24px;
   height: 24px;
@@ -95,8 +95,6 @@ body {
 }
 
 .cs-icon-btn-sm:hover { background: #1a1a2e; color: #9080f0; }
-
-
 
 /* ── Messages ─────────────────────────────────────────────── */
 .cs-messages {
@@ -132,49 +130,6 @@ body {
   color: #fff;
   font-size: 30px;
   box-shadow: 0 8px 36px rgba(124, 106, 247, 0.3);
-}
-
-.cs-empty-title {
-  font-family: 'Syne', sans-serif;
-  font-weight: 800;
-  font-size: 26px;
-  color: #d0d0e8;
-  letter-spacing: -0.5px;
-  margin-bottom: 9px;
-  text-align: center;
-}
-
-.cs-empty-subtitle {
-  color: #5b5b77;
-  font-size: 13.5px;
-  line-height: 1.7;
-  max-width: 380px;
-  text-align: center;
-}
-
-.cs-chips {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.cs-chip {
-  padding: 7px 16px;
-  background: #17172a;
-  border: 1px solid #20203a;
-  border-radius: 20px;
-  font-size: 12.5px;
-  color: #606080;
-  cursor: pointer;
-  font-family: 'DM Sans', sans-serif;
-  transition: all 0.15s;
-}
-
-.cs-chip:hover {
-  background: #1e1e30;
-  border-color: #7c6af7;
-  color: #9080f0;
 }
 
 /* ── Message Bubble ───────────────────────────────────────── */
@@ -310,6 +265,58 @@ body {
 }
 
 /* ══════════════════════════════════════════════════════════
+   SOURCE PILLS  (RAG citations under AI answers)
+   ══════════════════════════════════════════════════════════ */
+.cs-sources {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 7px;
+  padding-left: 2px;
+  animation: fadeIn 0.2s ease both;
+}
+
+.cs-sources-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9.5px;
+  color: #44445e;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.cs-sources-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.cs-source-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px 3px 7px;
+  background: #14142a;
+  border: 1px solid #26264a;
+  border-radius: 20px;
+  font-size: 11px;
+  color: #8080b0;
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.cs-source-pill:hover {
+  border-color: #7c6af7;
+  color: #9b8ff5;
+}
+
+/* ══════════════════════════════════════════════════════════
    INPUT BAR AREA
    ══════════════════════════════════════════════════════════ */
 .cs-input-wrap {
@@ -317,14 +324,17 @@ body {
   border-top: 1px solid rgb(73, 73, 73);
   flex-shrink: 0;
   background: #131b2e;
-  
+  position: relative;
 }
 
-/* Uploads toggle row */
+/* ── Uploads toggle row (also hosts docked action buttons) ── */
 .cs-uploads-toggle-row {
   display: flex;
+  align-items: center;
   justify-content: flex-start;
+  gap: 8px;
   margin-bottom: 8px;
+  flex-wrap: wrap;
 }
 
 .cs-uploads-toggle-btn {
@@ -341,6 +351,7 @@ body {
   cursor: pointer;
   font-family: 'DM Sans', sans-serif;
   transition: all 0.15s;
+  white-space: nowrap;
 }
 
 .cs-uploads-toggle-btn:hover {
@@ -403,6 +414,13 @@ body {
   padding: 6px 0;
   max-height: 160px;
   overflow-y: auto;
+}
+
+.cs-uploads-empty {
+  padding: 14px;
+  font-size: 12px;
+  color: #36364e;
+  text-align: center;
 }
 
 .cs-upload-item {
@@ -497,15 +515,11 @@ body {
   resize: none;
   font-family: 'DM Sans', sans-serif;
   line-height: 1.65;
-  
-  /* These control the expansion limit */
-  min-height: 24px; 
-  max-height: 200px; /* Increased slightly for better long-form drafting */
-  
+  min-height: 24px;
+  max-height: 200px;
   overflow-y: auto;
   scrollbar-width: thin;
   transition: opacity 0.15s;
-
 }
 
 .cs-textarea:disabled { opacity: 0.5; }
@@ -556,4 +570,74 @@ body {
   color: #ebebee;
 }
 
-.cs-mode-label { color: #7c6af7; font-weight: 600; }
+/* ══════════════════════════════════════════════════════════
+   ACTION BUTTONS — center-to-dock transition
+   ══════════════════════════════════════════════════════════ */
+
+/* Shared chip button style */
+.cs-chip {
+  padding: 7px 16px;
+  background: #17172a;
+  border: 1px solid #20203a;
+  border-radius: 20px;
+  font-size: 12.5px;
+  color: #606080;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.cs-chip:hover {
+  background: #1e1e30;
+  border-color: #7c6af7;
+  color: #9080f0;
+}
+
+.cs-chip.primary {
+  background: rgba(124, 106, 247, 0.12);
+  border-color: rgba(124, 106, 247, 0.35);
+  color: #9b8ff5;
+}
+
+.cs-chip.primary:hover {
+  background: rgba(124, 106, 247, 0.2);
+  border-color: #7c6af7;
+  color: #b8adfb;
+}
+
+/* Action row container */
+.cs-action-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* CENTER state — absolute, vertically centered in the body */
+.cs-action-row.at-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  justify-content: center;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+/* DOCKED state — inline in the uploads row */
+.cs-action-row.at-bottom {
+  position: relative;
+  top: 0;
+  left: 0;
+  transform: none;
+  justify-content: flex-start;
+  z-index: auto;
+}
+
+/* Smaller chips when docked */
+.cs-action-row.at-bottom .cs-chip {
+  padding: 4px 12px;
+  font-size: 11px;
+}
