@@ -5,12 +5,6 @@ import "./ResearchAnalyzer.css";
 const FLASK_API_URL = "http://localhost:5000/analyze";
 
 // ── Card config ───────────────────────────────────────────────────
-// Your Flask response must return JSON with these 3 keys:
-// {
-//   "differences": ["...", "..."],
-//   "gaps":        ["...", "..."],
-//   "summary":     ["...", "..."]
-// }
 const CARD_META = [
   {
     key:    "differences",
@@ -64,11 +58,21 @@ const XIcon = () => (
   </svg>
 );
 
+const PdfIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M14 2v6h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M9 13h1.5a1 1 0 010 2H9v-4h1.5a1 1 0 010 2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+    <path d="M14 11v4m0-4h1a1.5 1.5 0 010 3h-1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+    <path d="M17 11v4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+    <path d="M17 13h2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+  </svg>
+);
+
 // ── ResultCard ────────────────────────────────────────────────────
 function ResultCard({ meta, data, index }) {
   const [expanded, setExpanded] = useState(false);
 
-  // Normalize: accept array or newline-separated string from backend
   const items = Array.isArray(data)
     ? data
     : typeof data === "string"
@@ -127,8 +131,8 @@ function ResultCard({ meta, data, index }) {
 export default function ResearchAnalyzer() {
   const [files,    setFiles]    = useState([]);
   const [dragging, setDragging] = useState(false);
-  const [status,   setStatus]   = useState("idle"); // idle | uploading | success | error
-  const [results,  setResults]  = useState(null);   // populated from Flask response
+  const [status,   setStatus]   = useState("idle");
+  const [results,  setResults]  = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
   const inputRef = useRef();
 
@@ -155,7 +159,7 @@ export default function ResearchAnalyzer() {
   const removeFile = (name) =>
     setFiles((prev) => prev.filter((f) => f.name !== name));
 
-  // ── Send files to Flask, get 3-card data back ───────────────────
+  // ── Send files to Flask ─────────────────────────────────────────
   const handleAnalyze = async () => {
     if (!files.length) return;
 
@@ -164,15 +168,12 @@ export default function ResearchAnalyzer() {
     setErrorMsg("");
 
     const formData = new FormData();
-    // All files appended under the key "files"
-    // Flask: request.files.getlist("files")
     files.forEach((f) => formData.append("files", f));
 
     try {
       const res = await fetch(FLASK_API_URL, {
         method: "POST",
         body:   formData,
-        // Do NOT set Content-Type — browser sets it with boundary automatically
       });
 
       if (!res.ok) {
@@ -180,12 +181,6 @@ export default function ResearchAnalyzer() {
         throw new Error(text || `Server error: ${res.status}`);
       }
 
-      // Expected Flask response shape:
-      // {
-      //   "differences": ["Point 1", "Point 2", ...],
-      //   "gaps":        ["Gap 1",  "Gap 2",  ...],
-      //   "summary":     ["Insight 1", "Insight 2", ...]
-      // }
       const json = await res.json();
       setResults(json);
       setStatus("success");
@@ -205,6 +200,34 @@ export default function ResearchAnalyzer() {
   // ── Render ──────────────────────────────────────────────────────
   return (
     <div className="ra-root">
+
+      {/* ── Page Hero ── */}
+      <div className="ra-hero">
+        <div className="ra-hero__eyebrow">
+          <span className="ra-hero__dot" />
+          PDF Research Analysis
+        </div>
+        <h1 className="ra-hero__title">
+          Upload Your<br />
+          <span className="ra-hero__title-accent">Research Papers</span>
+        </h1>
+        <p className="ra-hero__desc">
+          Upload up to <strong>10 PDF documents</strong> and let Luminary do the heavy lifting —
+          extracting key differences, surfacing research gaps, and synthesizing
+          cross-paper insights in seconds.
+        </p>
+
+        {/* Feature pills */}
+        <div className="ra-hero__pills">
+          <span className="ra-pill"><PdfIcon /> PDF only</span>
+          <span className="ra-pill">◈ Key differences</span>
+          <span className="ra-pill">◉ Research gaps</span>
+          <span className="ra-pill">◆ Synthesis</span>
+        </div>
+      </div>
+
+      {/* ── Divider ── */}
+      <div className="ra-divider" />
 
       {/* ── Upload Section ── */}
       <div className="ra-upload">
@@ -322,7 +345,7 @@ export default function ResearchAnalyzer() {
         )}
       </div>
 
-      {/* ── Results: 3 cards from backend ── */}
+      {/* ── Results ── */}
       {status === "success" && results && (
         <div className="ra-results">
           <div className="ra-results__label">
