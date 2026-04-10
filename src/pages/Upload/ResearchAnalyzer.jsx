@@ -1,39 +1,8 @@
 import { useState, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import "./ResearchAnalyzer.css";
 
-// 🔧 Change this to your Flask backend URL
-const FLASK_API_URL = "http://localhost:5000/analyze";
-
-// ── Card config ───────────────────────────────────────────────────
-// Your Flask response must return JSON with these 3 keys:
-// {
-//   "differences": ["...", "..."],
-//   "gaps":        ["...", "..."],
-//   "summary":     ["...", "..."]
-// }
-const CARD_META = [
-  {
-    key:    "differences",
-    label:  "Key Differences",
-    icon:   "◈",
-    accent: "var(--ra-blue)",
-    desc:   "What sets each paper apart",
-  },
-  {
-    key:    "gaps",
-    label:  "Research Gaps",
-    icon:   "◉",
-    accent: "var(--ra-amber)",
-    desc:   "Unaddressed areas & open questions",
-  },
-  {
-    key:    "summary",
-    label:  "Synthesis",
-    icon:   "◆",
-    accent: "var(--ra-emerald)",
-    desc:   "Cross-paper insights & overlaps",
-  },
-];
+const API_BASE = "http://127.0.0.1:8000";
 
 // ── Icons ─────────────────────────────────────────────────────────
 const UploadIcon = () => (
@@ -64,75 +33,16 @@ const XIcon = () => (
   </svg>
 );
 
-// ── ResultCard ────────────────────────────────────────────────────
-function ResultCard({ meta, data, index }) {
-  const [expanded, setExpanded] = useState(false);
-
-  // Normalize: accept array or newline-separated string from backend
-  const items = Array.isArray(data)
-    ? data
-    : typeof data === "string"
-    ? data.split("\n").filter(Boolean)
-    : [String(data)];
-
-  const preview = items.slice(0, 3);
-  const rest    = items.slice(3);
-
-  return (
-    <div
-      className="ra-card"
-      style={{
-        "--card-delay":  `${index * 0.12}s`,
-        "--card-accent": meta.accent,
-      }}
-    >
-      <div className="ra-card__header">
-        <span className="ra-card__icon">{meta.icon}</span>
-        <div className="ra-card__title-group">
-          <h3 className="ra-card__title">{meta.label}</h3>
-          <p className="ra-card__desc">{meta.desc}</p>
-        </div>
-        <span className="ra-card__count">{items.length}</span>
-      </div>
-
-      <ul className="ra-card__list">
-        {preview.map((item, i) => (
-          <li key={i} className="ra-card__item">
-            <span className="ra-card__bullet" />
-            <span>{item.replace(/^[-•*]\s*/, "")}</span>
-          </li>
-        ))}
-        {expanded &&
-          rest.map((item, i) => (
-            <li key={`r${i}`} className="ra-card__item ra-card__item--extra">
-              <span className="ra-card__bullet" />
-              <span>{item.replace(/^[-•*]\s*/, "")}</span>
-            </li>
-          ))}
-      </ul>
-
-      {rest.length > 0 && (
-        <button
-          className="ra-card__expand"
-          onClick={() => setExpanded((p) => !p)}
-        >
-          {expanded ? "↑ Show less" : `↓ ${rest.length} more`}
-        </button>
-      )}
-    </div>
-  );
-}
-
 // ── Main Component ────────────────────────────────────────────────
 export default function ResearchAnalyzer() {
   const [files,    setFiles]    = useState([]);
   const [dragging, setDragging] = useState(false);
-  const [status,   setStatus]   = useState("idle"); // idle | uploading | success | error
-  const [results,  setResults]  = useState(null);   // populated from Flask response
+  const [status,   setStatus]   = useState("idle"); // idle | uploading | error
   const [errorMsg, setErrorMsg] = useState("");
   const inputRef = useRef();
+  const navigate = useNavigate();
 
-  // ── File handling ───────────────────────────────────────────────
+  // ── File handling ─────────────────────────────────────────────
   const addFiles = useCallback((incoming) => {
     const valid = Array.from(incoming).filter((f) =>
       /\.(pdf|docx|txt)$/i.test(f.name)
@@ -155,69 +65,65 @@ export default function ResearchAnalyzer() {
   const removeFile = (name) =>
     setFiles((prev) => prev.filter((f) => f.name !== name));
 
-  // ── Send files to Flask, get 3-card data back ───────────────────
+  // ── Upload → redirect to /summary with session_id in state ────
+  // Every subsequent page (Summary, ResearchGaps, Contradictions,
+  // Chat, Ideas) reads location.state.session_id and calls its
+  // own endpoint independently. The sidebar links must use
+  // <Link to="/summary" state={location.state}> to forward
+  // the session_id when navigating between pages.
   const handleAnalyze = async () => {
     if (!files.length) return;
 
     setStatus("uploading");
-    setResults(null);
     setErrorMsg("");
 
-    const formData = new FormData();
-    // All files appended under the key "files"
-    // Flask: request.files.getlist("files")
-    files.forEach((f) => formData.append("files", f));
-
     try {
-      const res = await fetch(FLASK_API_URL, {
+      const formData = new FormData();
+      files.forEach((f) => formData.append("files", f));
+
+      const res = await fetch(`${API_BASE}/upload`, {
         method: "POST",
         body:   formData,
-        // Do NOT set Content-Type — browser sets it with boundary automatically
       });
 
       if (!res.ok) {
         const text = await res.text();
-        throw new Error(text || `Server error: ${res.status}`);
+        throw new Error(text || `Upload failed: ${res.status}`);
       }
 
-      // Expected Flask response shape:
-      // {
-      //   "differences": ["Point 1", "Point 2", ...],
-      //   "gaps":        ["Gap 1",  "Gap 2",  ...],
-      //   "summary":     ["Insight 1", "Insight 2", ...]
-      // }
-      const json = await res.json();
-      setResults(json);
-      setStatus("success");
+      const { session_id, num_files } = await res.json();
+
+      navigate("/summary", {
+        state: {
+          session_id,
+          num_files,
+          file_names: files.map((f) => f.name),
+        },
+      });
     } catch (err) {
-      setErrorMsg(err.message || "Could not reach the server. Is Flask running?");
+      setErrorMsg(err.message || "Could not reach the server. Is FastAPI running?");
       setStatus("error");
     }
   };
 
   const reset = () => {
     setFiles([]);
-    setResults(null);
     setStatus("idle");
     setErrorMsg("");
   };
 
-  // ── Render ──────────────────────────────────────────────────────
+  const isUploading = status === "uploading";
+
   return (
     <div className="ra-root">
-
-      {/* ── Upload Section ── */}
       <div className="ra-upload">
 
-        {/* Drop zone */}
         <div
           className={[
             "ra-dropzone",
             dragging     ? "ra-dropzone--over"      : "",
             files.length ? "ra-dropzone--has-files" : "",
-          ]
-            .filter(Boolean)
-            .join(" ")}
+          ].filter(Boolean).join(" ")}
           onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
           onDragLeave={() => setDragging(false)}
           onDrop={handleDrop}
@@ -236,27 +142,19 @@ export default function ResearchAnalyzer() {
             onChange={(e) => addFiles(e.target.files)}
           />
           <div className="ra-dropzone__inner">
-            <div className="ra-dropzone__icon">
-              <UploadIcon />
-            </div>
+            <div className="ra-dropzone__icon"><UploadIcon /></div>
             <p className="ra-dropzone__headline">
               {dragging ? "Release to add papers" : "Drop research papers here"}
             </p>
             <p className="ra-dropzone__sub">
               PDF · DOCX · TXT &nbsp;·&nbsp;{" "}
-              <span
-                onClick={(e) => {
-                  e.stopPropagation();
-                  inputRef.current?.click();
-                }}
-              >
+              <span onClick={(e) => { e.stopPropagation(); inputRef.current?.click(); }}>
                 browse files
               </span>
             </p>
           </div>
         </div>
 
-        {/* File list */}
         {files.length > 0 && (
           <ul className="ra-filelist">
             {files.map((f) => (
@@ -278,22 +176,19 @@ export default function ResearchAnalyzer() {
           </ul>
         )}
 
-        {/* Action row */}
         <div className="ra-actions">
           <button
             className={[
               "ra-actions__analyze",
-              status === "uploading" ? "ra-actions__analyze--loading" : "",
-            ]
-              .filter(Boolean)
-              .join(" ")}
+              isUploading ? "ra-actions__analyze--loading" : "",
+            ].filter(Boolean).join(" ")}
             onClick={handleAnalyze}
-            disabled={!files.length || status === "uploading"}
+            disabled={!files.length || isUploading}
           >
-            {status === "uploading" ? (
+            {isUploading ? (
               <>
                 <span className="ra-spinner" />
-                Analyzing…
+                Uploading…
               </>
             ) : (
               <>
@@ -306,14 +201,13 @@ export default function ResearchAnalyzer() {
             )}
           </button>
 
-          {(status === "success" || status === "error") && (
+          {status === "error" && (
             <button className="ra-actions__reset" onClick={reset}>
               Start over
             </button>
           )}
         </div>
 
-        {/* Error banner */}
         {status === "error" && (
           <div className="ra-error">
             <span>⚠</span>
@@ -321,31 +215,6 @@ export default function ResearchAnalyzer() {
           </div>
         )}
       </div>
-
-      {/* ── Results: 3 cards from backend ── */}
-      {status === "success" && results && (
-        <div className="ra-results">
-          <div className="ra-results__label">
-            <span className="ra-results__line" />
-            <span>Analysis Complete</span>
-            <span className="ra-results__line" />
-          </div>
-
-          <div className="ra-grid">
-            {CARD_META.map((meta, i) => (
-              <ResultCard
-                key={meta.key}
-                meta={meta}
-                data={
-                  results[meta.key] ??
-                  ["No data returned for this section."]
-                }
-                index={i}
-              />
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

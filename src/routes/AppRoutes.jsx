@@ -9,44 +9,30 @@ import ResearchGaps from "../pages/Chat/ResearchGap";
 import Contradictions from "../pages/Chat/Contradictions";
 
 const AppRoutes = () => {
-
   return (
-
     <BrowserRouter basename="/Aetheron">
       <Routes>
-        <Route path="/" element={<Layout />} />
-          <Route index element={<LandingPage />} />
-        {/* 1. Landing Page sits outside the Layout (Full Screen) */}
-        <Route path="/" element={<LandingPage />} />
 
-        {/* 2. Catch-all for the old path if it's cached in your browser */}
+        {/* 1. Landing page — full screen, no layout */}
+        <Route path="/" element={<LandingPage />} />
         <Route path="/landingpage" element={<Navigate to="/" replace />} />
 
-        {/* 3. Dashboard Routes wrapped in the Layout (Sidebar starts here) */}
+        {/* 2. App pages — wrapped in sidebar Layout */}
         <Route element={<Layout />}>
-          
-        <Route path="/upload" element={<ResearchAnalyzer />} />
-        <Route path="/chat" element={<Chat />} />
-        <Route path="/summary" element={<Summary />} />
-        <Route path="/gaps" element={<ResearchGaps />} />
-        <Route path="/contradictions" element={<Contradictions />} />
-        <Route path="/ideas" element={<Ideas />} />
-        <Route path="/chat" element={<Chat />} />
-
+          <Route path="/upload"         element={<ResearchAnalyzer />} />
+          <Route path="/summary"        element={<Summary />} />
+          <Route path="/gaps"           element={<ResearchGaps />} />
+          <Route path="/contradictions" element={<Contradictions />} />
+          <Route path="/chat"           element={<Chat />} />
+          <Route path="/ideas"          element={<Ideas />} />
         </Route>
 
-        {/* 4. Global fallback to prevent blank pages */}
-
+        {/* 3. Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
 
       </Routes>
-
     </BrowserRouter>
-
   );
-
 };
-
-
 
 export default AppRoutes;

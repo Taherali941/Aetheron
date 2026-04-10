@@ -1,9 +1,21 @@
-// Drop-in replacement — same props interface as before.
-// Add your actual <NavLink> routes; icon map is at the bottom.
-
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import "./Sidebar.css";
 
+// ── SessionLink: forwards session_id state on every navigation ────
+function SessionLink({ to, className, children }) {
+  const location = useLocation();
+  return (
+    <NavLink
+      to={to}
+      state={location.state}
+      className={className}
+    >
+      {children}
+    </NavLink>
+  );
+}
+
+// ── Icons ─────────────────────────────────────────────────────────
 const icons = {
   dashboard: (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -53,24 +65,71 @@ const icons = {
       <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
     </svg>
   ),
+  upload: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="17 8 12 3 7 8" />
+      <line x1="12" y1="3" x2="12" y2="15" />
+    </svg>
+  ),
+  summary: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="8" y1="6"  x2="21" y2="6"  />
+      <line x1="8" y1="12" x2="21" y2="12" />
+      <line x1="8" y1="18" x2="21" y2="18" />
+      <line x1="3" y1="6"  x2="3.01" y2="6"  />
+      <line x1="3" y1="12" x2="3.01" y2="12" />
+      <line x1="3" y1="18" x2="3.01" y2="18" />
+    </svg>
+  ),
+  gaps: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      <line x1="11" y1="8" x2="11" y2="14" />
+      <line x1="8" y1="11" x2="14" y2="11" />
+    </svg>
+  ),
+  contradictions: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <line x1="9" y1="9" x2="15" y2="15" />
+      <line x1="15" y1="9" x2="9" y2="15" />
+    </svg>
+  ),
+  chat: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  ),
+  ideas: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="9" y1="18" x2="15" y2="18" />
+      <line x1="10" y1="22" x2="14" y2="22" />
+      <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14" />
+    </svg>
+  ),
 };
 
+// ── Nav config ────────────────────────────────────────────────────
+// Routes that need session_id forwarded are marked session: true
 const navItems = [
-  { to: "/", label: "Dashboard",  icon: "dashboard"  },
-  { to: "/upload",  label: "upload",   icon: "projects"   },
-  { to: "/chat", label: "chat",  icon: "analytics"  },
-  { to: "/ideas",    label: "ideas",   icon: "team"       },
-  { to: "/messages",  label: "Messages",   icon: "messages"   },
+  { to: "/upload",         label: "Upload",         icon: "upload",         session: false },
+  { to: "/summary",        label: "Summary",        icon: "summary",        session: true  },
+  { to: "/gaps",           label: "Research Gaps",  icon: "gaps",           session: true  },
+  { to: "/contradictions", label: "Contradictions", icon: "contradictions", session: true  },
+  { to: "/chat",           label: "Chat",           icon: "chat",           session: true  },
+  { to: "/ideas",          label: "Ideas",          icon: "ideas",          session: true  },
 ];
 
 const bottomItems = [
-  { to: "/settings", label: "Settings", icon: "settings" },
+  { to: "/settings", label: "Settings", icon: "settings", session: false },
 ];
 
+// ── Sidebar ───────────────────────────────────────────────────────
 const Sidebar = ({ isOpen, setIsOpen }) => {
   return (
     <>
-      {/* Mobile backdrop */}
       {isOpen && (
         <div className="sidebar-backdrop" onClick={() => setIsOpen(false)} />
       )}
@@ -82,23 +141,36 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           <span className="logo-text">Luminary</span>
         </div>
 
-        {/* Divider */}
         <div className="sidebar-divider" />
 
         {/* Primary nav */}
         <nav className="sidebar-nav">
-          {navItems.map(({ to, label, icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) =>
-                `nav-item${isActive ? " active" : ""}`
-              }
-            >
-              <span className="nav-icon">{icons[icon]}</span>
-              <span className="nav-label">{label}</span>
-            </NavLink>
-          ))}
+          {navItems.map(({ to, label, icon, session }) =>
+            session ? (
+              // SessionLink forwards location.state (which holds session_id)
+              <SessionLink
+                key={to}
+                to={to}
+                className={({ isActive }) =>
+                  `nav-item${isActive ? " active" : ""}`
+                }
+              >
+                <span className="nav-icon">{icons[icon]}</span>
+                <span className="nav-label">{label}</span>
+              </SessionLink>
+            ) : (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) =>
+                  `nav-item${isActive ? " active" : ""}`
+                }
+              >
+                <span className="nav-icon">{icons[icon]}</span>
+                <span className="nav-label">{label}</span>
+              </NavLink>
+            )
+          )}
         </nav>
 
         {/* Footer */}
