@@ -41,13 +41,13 @@
   border: none;
   background: transparent;
   border-radius: 8px;
-  color: #6b7280;
+  color: #9ca3af;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
 .topbar-icon-btn:hover {
-  background: #f3f4f6;
-  color: #111827;
+  background: rgba(255,255,255,0.08);
+  color: #fff;
 }
 
 .notif-badge {
@@ -88,7 +88,7 @@
   color: #111827;
 }
 .topbar-profile-btn:hover {
-  background: #f3f4f6;
+  background: #606368;
 }
 
 .avatar {
@@ -114,6 +114,7 @@
   font-size: 14px;
   font-weight: 500;
   white-space: nowrap;
+  color: #f2f3f7;
 }
 
 /* ── dropdowns ── */
@@ -229,3 +230,10 @@
 .dropdown-item:hover { background: #f9fafb; }
 .dropdown-item.danger { color: #ef4444; }
 .dropdown-item.danger:hover { background: #fef2f2; }
+
+.empty-msg {
+  padding: 12px;
+  text-align: center;
+  font-size: 13px;
+  color: #9ca3af;
+}
