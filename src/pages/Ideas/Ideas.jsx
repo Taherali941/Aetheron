@@ -340,11 +340,11 @@ const IdeaGeneratorPage = () => {
         )}
       </main>
 
-      {/* ── Footer ── */}
+      {/* ── Footer ──
       <footer className="ig-footer">
         <span>Algorithm: Neural-Synthesis v4.2</span>
         <span>© 2024 Cognitive Sanctuary</span>
-      </footer>
+      </footer> */}
     </div>
   );
 };

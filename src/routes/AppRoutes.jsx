@@ -12,18 +12,26 @@ const AppRoutes = () => {
   return (
     <BrowserRouter basename="/Aetheron">
       <Routes>
-  {/* 1. Use 'index' for the Landing Page */}
-  <Route index element={<LandingPage />} />
+        <Route path="/" element={<Layout />} />
+          <Route index element={<LandingPage />} />
+        {/* 1. Landing Page sits outside the Layout (Full Screen) */}
+        <Route path="/" element={<LandingPage />} />
 
-  {/* 2. Layout with NO path attribute */}
-  <Route element={<Layout />}>
-    <Route path="upload" element={<ResearchAnalyzer />} />
-    <Route path="chat" element={<Chat />} />
-    <Route path="summary" element={<Summary />} />
-    <Route path="gaps" element={<ResearchGaps />} />
-    <Route path="contradictions" element={<Contradictions />} />
-    <Route path="ideas" element={<Ideas />} />
-  </Route>
+        {/* 2. Catch-all for the old path if it's cached in your browser */}
+        <Route path="/landingpage" element={<Navigate to="/" replace />} />
+
+        {/* 3. Dashboard Routes wrapped in the Layout (Sidebar starts here) */}
+        <Route element={<Layout />}>
+          
+        <Route path="/upload" element={<ResearchAnalyzer />} />
+        <Route path="/chat" element={<Chat />} />
+        <Route path="/summary" element={<Summary />} />
+        <Route path="/gaps" element={<ResearchGaps />} />
+        <Route path="/contradictions" element={<Contradictions />} />
+        <Route path="/ideas" element={<Ideas />} />
+        <Route path="/chat" element={<Chat />} />
+
+        </Route>
 
   {/* 3. Global fallback */}
   <Route path="*" element={<Navigate to="/" replace />} />
